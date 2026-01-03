@@ -1,3 +1,72 @@
 <resources>
-    <string name="app_name">Party in Pocket</string>
+    <string name="app_name">Вечеринка в кармане</string>
+
+    <!-- Games -->
+    <string name="game_hat">Шляпа</string>
+    <string name="game_hat_desc">Объясняй, показывай, угадывай!</string>
+    <string name="game_alias">Алиас</string>
+    <string name="game_alias_desc">Скоро</string>
+    <string name="game_crocodile">Крокодил</string>
+    <string name="game_crocodile_desc">Скоро</string>
+    <string name="game_spy">Шпион</string>
+    <string name="game_spy_desc">Скоро</string>
+
+    <!-- Hat Game Rounds -->
+    <string name="round_explain">Объяснение</string>
+    <string name="round_pantomime">Пантомима</string>
+    <string name="round_association">Ассоциация</string>
+
+    <!-- Hat Game Rules -->
+    <string name="rules_explain">Объясняй слово, не используя однокоренные слова</string>
+    <string name="rules_pantomime">Покажи слово жестами без звуков</string>
+    <string name="rules_association">Скажи одно слово-ассоциацию</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Выбери игру</string>
+    <string name="coming_soon">Скоро</string>
+
+    <!-- Hat Setup Screen -->
+    <string name="setup_title">Настройка игры</string>
+    <string name="setup_teams">Команд</string>
+    <string name="setup_words">Слов</string>
+    <string name="setup_time">Время на ход (сек)</string>
+    <string name="setup_skips">Пропусков на команду</string>
+    <string name="setup_word_packs">Наборы слов</string>
+    <string name="setup_available_words">Доступно слов: %d</string>
+    <string name="setup_next">Далее</string>
+
+    <!-- Hat Teams Screen -->
+    <string name="teams_title">Команды</string>
+    <string name="teams_team">Команда %d</string>
+    <string name="teams_start">Начать игру</string>
+
+    <!-- Hat Game Screen -->
+    <string name="game_ready">Готовы?</string>
+    <string name="game_start">Старт</string>
+    <string name="game_guessed">Угадали</string>
+    <string name="game_skip">Пропустить</string>
+    <string name="game_score" formatted="false">%d : %d</string>
+    <string name="game_skips_left">Пропусков: %d</string>
+    <string name="game_words_left">Осталось слов: %d</string>
+
+    <!-- Hat Result Screens -->
+    <string name="turn_result_title">Результаты хода</string>
+    <string name="turn_result_guessed">Угадано</string>
+    <string name="turn_result_skipped">Пропущено</string>
+    <string name="turn_result_points">+%d очков</string>
+    <string name="turn_result_next">Следующая команда</string>
+    <string name="turn_result_pass_phone">Передайте телефон</string>
+
+    <string name="round_result_title">Раунд %d завершён</string>
+    <string name="round_result_next_round">Следующий раунд</string>
+    <string name="round_result_final">Итоги</string>
+
+    <string name="final_result_title">Победители!</string>
+    <string name="final_result_place">%d место</string>
+    <string name="final_result_play_again">Играть снова</string>
+    <string name="final_result_menu">В меню</string>
+
+    <!-- Common -->
+    <string name="back">Назад</string>
+    <string name="cancel">Отмена</string>
 </resources>
