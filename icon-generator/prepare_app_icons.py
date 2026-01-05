@@ -86,6 +86,27 @@ def prepare_icons(input_image_path: str, output_dir: str = "../app/src/main/res"
 
             print(f"   ✅ {density:8s} ({size}x{size}px) -> {output_path}")
 
+        # Создаём иконку 512x512 для RuStore в папке for_release
+        print(f"\n📦 Создание иконки для магазинов:")
+        release_dir = output_base.parent.parent.parent.parent / "for_release"
+        release_dir.mkdir(exist_ok=True)
+
+        # Изменяем размер до 512x512
+        store_icon = img.resize((512, 512), Image.Resampling.LANCZOS)
+        store_icon_path = release_dir / "icon.png"
+
+        # Подбираем качество, чтобы размер был до 1 МБ
+        quality = 95
+        while quality > 50:
+            store_icon.save(store_icon_path, "PNG", optimize=True, quality=quality)
+            file_size = store_icon_path.stat().st_size
+            if file_size <= 1024 * 1024:  # 1 МБ
+                break
+            quality -= 5
+
+        file_size_kb = store_icon_path.stat().st_size / 1024
+        print(f"   ✅ 512x512 ({file_size_kb:.1f} KB) -> {store_icon_path}")
+
         print(f"\n✨ Готово! Иконки сохранены в {output_base}")
         print(f"\n📝 Следующие шаги:")
         print(f"   1. Пересоберите проект: ./gradlew clean assembleDebug")
