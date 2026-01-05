@@ -4,22 +4,73 @@ Android party games collection app with AI-powered word generation.
 
 ## Build & Run Commands
 
-### Setup Environment
+### Quick Commands (Makefile)
+
+**Recommended way** - use Makefile for all operations:
+
+```bash
+# Show all available commands
+make help
+
+# Build release and debug APK
+make build
+
+# Build only release APK
+make build-release
+
+# Install release APK on device
+make install
+
+# Show current version info
+make info
+
+# Clean build artifacts
+make clean
+```
+
+### Icon Generation
+
+```bash
+# Generate new icon with default prompt
+make icon
+
+# Generate with custom prompt
+make icon PROMPT="Your icon description"
+
+# Copy generated icon to app resources (removes adaptive icons)
+make copy-icon
+```
+
+### Version Management
+
+```bash
+# Increment version (0.0.1 -> 0.0.2)
+make bump-version
+
+# Check current version
+make info
+```
+
+### Manual Commands (if needed)
+
+#### Setup Environment
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
-### Build APK
+#### Build APK
 ```bash
 ./gradlew :app:assembleDebug
+./gradlew :app:assembleRelease
 ```
 
-### Install on Device
+#### Install on Device
 ```bash
 ~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/release/app-release.apk
 ```
 
-### View Logs
+#### View Logs
 ```bash
 # All error logs
 ~/Library/Android/sdk/platform-tools/adb logcat -d "*:E"
@@ -28,7 +79,7 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ~/Library/Android/sdk/platform-tools/adb logcat -d "WordGeneration:D" "*:S"
 ```
 
-### Gradle Tasks
+#### Gradle Tasks
 ```bash
 ./gradlew clean
 ./gradlew :app:assembleRelease
@@ -453,12 +504,101 @@ put("required", buildJsonArray {
 - Test rapid navigation (double-tap back button)
 - Test API error scenarios (invalid token, rate limits)
 
+## Release & Distribution
+
+### Release Build Process
+
+**Current setup**: Release builds use debug signing (no keystore needed) for RuStore manual publishing.
+
+```bash
+# 1. Update version
+make bump-version
+
+# 2. Build release APK
+make build-release
+
+# 3. Copy for RuStore
+cp app/build/outputs/apk/release/app-release.apk PartyInPocket-v0.0.X.apk
+```
+
+### ProGuard Configuration
+
+Release builds have R8 minification enabled (`isMinifyEnabled = true`). Required rules in `app/proguard-rules.pro`:
+
+```proguard
+# Ktor - suppress SLF4J warnings
+-dontwarn org.slf4j.**
+-dontwarn io.ktor.**
+-keep class io.ktor.** { *; }
+
+# Kotlinx Serialization - keep serializers
+-keepattributes *Annotation*, InnerClasses
+-keep,includedescriptorclasses class com.m3games.partyinpocket.**$$serializer { *; }
+-keepclassmembers class com.m3games.partyinpocket.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.m3games.partyinpocket.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+```
+
+### Icon Generation Workflow
+
+Icons are generated using AI (OpenAI/AI Tunnel) via Python script in `icon-generator/`:
+
+```bash
+cd icon-generator
+
+# Generate icon
+uv run main.py generate -p "Your icon description"
+
+# Prepare for Android (converts to all densities)
+uv run prepare_app_icons.py output/TIMESTAMP_generated_icon.png
+
+# Or use Makefile from project root
+cd ..
+make icon PROMPT="Your description"
+make copy-icon
+```
+
+**Important**: `prepare_app_icons.py` automatically removes:
+- `mipmap-anydpi-v26/` (adaptive icon XMLs that reference old drawables)
+- `drawable/ic_launcher_*.xml` (old launcher icon drawables)
+
+This ensures WebP icons are used on all Android versions.
+
+### RuStore Publishing
+
+App descriptions are in README.md under "Публикация в RuStore" section. Copy from there when publishing.
+
+**Current version**: 0.0.1 (versionCode: 1, versionName: "0.0.1")
+
 ## Future Improvements
 
-1. **Persistence**: Add Room database for generated word packs
-2. **DI**: Consider Hilt/Koin if project grows
-3. **Testing**: Add unit tests for game logic, UI tests for critical flows
-4. **Analytics**: Track game completions, word generation usage
-5. **More Games**: Alias, Spy, Crocodile (see README for ideas)
-6. **Localization**: Support English and other languages
-7. **Settings**: Dark theme toggle, sound effects, haptic feedback
+### High Priority
+1. **Persistence for Generated Packs**: Add Room database or DataStore to save AI-generated word packs between sessions
+2. **Cloud Sync**: Allow users to backup/restore their custom word packs
+3. **Statistics**: Track games played, favorite word packs, team win rates
+4. **Sound & Haptics**: Add timer beep, success/fail sounds, button vibration
+
+### Medium Priority
+5. **More Games**: Alias, Spy, Crocodile, Mafia (see README for full list)
+6. **Localization**: Support English, Ukrainian
+7. **Dark Theme**: Add theme toggle in settings
+8. **Enhanced AI Generation**:
+   - Choose difficulty level (easy/medium/hard words)
+   - Mix multiple themes
+   - Exclude specific words/topics
+
+### Low Priority / Technical Debt
+9. **DI Framework**: Consider Hilt/Koin if project complexity grows
+10. **Testing**: Add unit tests for game logic, UI tests for critical flows
+11. **Analytics**: Firebase Analytics for usage tracking (requires privacy policy)
+12. **Proper Signing**: Add keystore for Google Play (if publishing there in future)
+
+### Known Limitations
+- Generated word packs don't persist after app restart (stored in memory only)
+- No undo/redo for game actions
+- Can't edit teams after game starts
+- Timer doesn't pause when app goes to background (Android limitation)
+- No offline mode for AI generation (requires internet)

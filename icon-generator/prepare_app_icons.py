@@ -53,6 +53,20 @@ def prepare_icons(input_image_path: str, output_dir: str = "../app/src/main/res"
             print(f"   Убедитесь, что запускаете скрипт из правильной директории")
             sys.exit(1)
 
+        # Удаляем adaptive icons (они ссылаются на старые drawable)
+        adaptive_icon_dir = output_base / "mipmap-anydpi-v26"
+        if adaptive_icon_dir.exists():
+            print(f"🗑️  Удаление adaptive icons из {adaptive_icon_dir}")
+            import shutil
+            shutil.rmtree(adaptive_icon_dir)
+
+        # Удаляем старые drawable launcher иконки
+        drawable_dir = output_base / "drawable"
+        if drawable_dir.exists():
+            for old_icon in drawable_dir.glob("ic_launcher_*.xml"):
+                print(f"🗑️  Удаление {old_icon}")
+                old_icon.unlink()
+
         # Генерируем иконки для каждой плотности
         print(f"\n🔨 Генерация иконок:")
         for density, size in ICON_SIZES.items():
