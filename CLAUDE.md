@@ -586,13 +586,29 @@ Repository has automated builds configured:
 
 **Creating a release:**
 ```bash
+# 1. Bump version
 make bump-version
-git add app/build.gradle.kts
+
+# 2. Create changelog
+mkdir -p for_release/v0.0.X
+nano for_release/v0.0.X/CHANGELOG.md
+# Use for_release/CHANGELOG_TEMPLATE.md as reference
+
+# 3. Commit and tag
+git add app/build.gradle.kts for_release/v0.0.X/
 git commit -m "Bump version to 0.0.X"
 git tag v0.0.X
+
+# 4. Push
 git push origin main
 git push origin v0.0.X
 ```
+
+**Changelog structure:**
+- Each version has its own directory: `for_release/vX.Y.Z/`
+- Contains `CHANGELOG.md` describing what's new
+- GitHub Actions automatically reads this file and includes in release notes
+- If file is missing, release will show: "_Описание изменений не добавлено_"
 
 ### RuStore Publishing
 

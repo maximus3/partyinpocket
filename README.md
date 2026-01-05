@@ -157,18 +157,23 @@ cd ..
 # 1. Обновите версию
 make bump-version
 
-# 2. Закоммитьте изменения
-git add app/build.gradle.kts
+# 2. Создайте changelog для версии
+mkdir -p for_release/v0.0.2
+nano for_release/v0.0.2/CHANGELOG.md
+# Опишите изменения (используйте for_release/CHANGELOG_TEMPLATE.md как шаблон)
+
+# 3. Закоммитьте изменения
+git add app/build.gradle.kts for_release/v0.0.2/
 git commit -m "Bump version to 0.0.2"
 
-# 3. Создайте тег
+# 4. Создайте тег
 git tag v0.0.2
 
-# 4. Запушьте
+# 5. Запушьте
 git push origin main
 git push origin v0.0.2
 
-# GitHub Actions автоматически создаст релиз с APK файлами
+# GitHub Actions автоматически создаст релиз с APK файлами и описанием из changelog
 ```
 
 ## 📦 Публикация в RuStore

@@ -10,16 +10,22 @@ make copy-icon
 # 2. Увеличить версию
 make bump-version
 
-# 3. Закоммитить и создать тег
-git add app/build.gradle.kts app/src/main/res/
+# 3. Создать changelog
+mkdir -p for_release/v0.0.X
+nano for_release/v0.0.X/CHANGELOG.md
+# Используйте for_release/CHANGELOG_TEMPLATE.md как шаблон
+
+# 4. Закоммитить и создать тег
+git add app/build.gradle.kts app/src/main/res/ for_release/v0.0.X/
 git commit -m "Bump version to 0.0.X"
 git tag v0.0.X
 git push origin main
 git push origin v0.0.X
 
-# 4. GitHub Actions автоматически:
+# 5. GitHub Actions автоматически:
 #    - Соберёт release и debug APK
-#    - Создаст GitHub Release с файлами
+#    - Прочитает changelog из for_release/v0.0.X/CHANGELOG.md
+#    - Создаст GitHub Release с файлами и описанием
 #    - Можно скачать APK из Releases
 ```
 

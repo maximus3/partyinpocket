@@ -40,6 +40,18 @@ jobs:
           mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/PartyInPocket-v${{ steps.version.outputs.VERSION }}-debug.apk
           mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/PartyInPocket-v${{ steps.version.outputs.VERSION }}.apk
 
+      - name: Read changelog
+        id: changelog
+        run: |
+          CHANGELOG_FILE="for_release/v${{ steps.version.outputs.VERSION }}/CHANGELOG.md"
+          if [ -f "$CHANGELOG_FILE" ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            cat "$CHANGELOG_FILE" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG=_Описание изменений не добавлено_" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -58,8 +70,9 @@ jobs:
             2. Разрешите установку из неизвестных источников в настройках Android
             3. Установите приложение
 
-            ### 📝 Что нового
-            _Опишите изменения в этой версии_
+            ---
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
           draft: false
           prerelease: false
         env:
