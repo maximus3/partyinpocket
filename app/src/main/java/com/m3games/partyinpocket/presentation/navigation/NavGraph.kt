@@ -140,6 +140,11 @@ fun NavGraph(
                     if (navController.currentDestination?.route == Screen.HatTurnResult.route) {
                         navController.popBackStack(Screen.HatGame.route, inclusive = false)
                     }
+                },
+                onExitGame = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
                 }
             )
         }
@@ -165,7 +170,12 @@ fun NavGraph(
 
             HatRoundResultScreen(
                 viewModel = hatViewModel,
-                onNext = {}
+                onNext = {},
+                onExitGame = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
+                }
             )
         }
 

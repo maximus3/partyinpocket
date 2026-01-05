@@ -70,35 +70,36 @@ copy-icon:
 # Версия
 bump-version:
 	@echo "📈 Увеличение версии..."
-	@python3 -c '\
-import re; \
-import sys; \
-\
-with open("app/build.gradle.kts", "r") as f: \
-    content = f.read(); \
-\
-version_code_match = re.search(r"versionCode = (\d+)", content); \
-version_name_match = re.search(r"versionName = \"(\d+)\.(\d+)\.(\d+)\"", content); \
-\
-if not version_code_match or not version_name_match: \
-    print("❌ Не удалось найти версию в build.gradle.kts"); \
-    sys.exit(1); \
-\
-old_code = int(version_code_match.group(1)); \
-new_code = old_code + 1; \
-\
-major, minor, patch = map(int, version_name_match.groups()); \
-patch += 1; \
-new_version_name = f"{major}.{minor}.{patch}"; \
-\
-content = re.sub(r"versionCode = \d+", f"versionCode = {new_code}", content); \
-content = re.sub(r"versionName = \"\d+\.\d+\.\d+\"", f"versionName = \"{new_version_name}\"", content); \
-\
-with open("app/build.gradle.kts", "w") as f: \
-    f.write(content); \
-\
-print(f"✅ Версия обновлена: {old_code} -> {new_code}, v{version_name_match.group(0).split(\"\\\"\")[1]} -> v{new_version_name}"); \
-'
+	@python3 <<EOF\
+	import re\
+	import sys\
+	\
+	with open("app/build.gradle.kts", "r") as f:\
+	    content = f.read()\
+	\
+	version_code_match = re.search(r"versionCode = (\d+)", content)\
+	version_name_match = re.search(r'versionName = "(\d+)\.(\d+)\.(\d+)"', content)\
+	\
+	if not version_code_match or not version_name_match:\
+	    print("❌ Не удалось найти версию в build.gradle.kts")\
+	    sys.exit(1)\
+	\
+	old_code = int(version_code_match.group(1))\
+	new_code = old_code + 1\
+	\
+	major, minor, patch = map(int, version_name_match.groups())\
+	old_version = f"{major}.{minor}.{patch}"\
+	patch += 1\
+	new_version = f"{major}.{minor}.{patch}"\
+	\
+	content = re.sub(r"versionCode = \d+", f"versionCode = {new_code}", content)\
+	content = re.sub(r'versionName = "\d+\.\d+\.\d+"', f'versionName = "{new_version}"', content)\
+	\
+	with open("app/build.gradle.kts", "w") as f:\
+	    f.write(content)\
+	\
+	print(f"✅ Версия обновлена: {old_code} -> {new_code}, v{old_version} -> v{new_version}")\
+	EOF
 
 info:
 	@echo "ℹ️  Информация о проекте:"

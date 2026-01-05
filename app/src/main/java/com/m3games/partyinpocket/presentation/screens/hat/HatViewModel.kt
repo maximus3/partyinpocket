@@ -264,9 +264,10 @@ class HatViewModel : ViewModel() {
                 // Keep remainingTimeSeconds for next round
             )
         } else {
-            // Switch to next team and reset time to full duration
+            // Switch to next team, shuffle remaining words and reset time to full duration
             _gameState.value = state.copy(
                 currentTeamIndex = state.nextTeamIndex,
+                remainingWords = state.remainingWords.shuffled(),
                 phase = HatGamePhase.READY_TO_START,
                 currentWord = null,
                 guessedInTurn = emptyList(),
