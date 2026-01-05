@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +27,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,7 +58,8 @@ fun HatSetupScreen(
     viewModel: HatViewModel,
     aiSettings: AiSettings,
     onNavigateBack: () -> Unit,
-    onNavigateToTeams: () -> Unit
+    onNavigateToTeams: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val settings by viewModel.settings.collectAsState()
     val generationState by viewModel.wordGenerationState.collectAsState()
@@ -60,6 +70,7 @@ fun HatSetupScreen(
     var showSuccessNameDialog by remember { mutableStateOf(false) }
     var showPartialNameDialog by remember { mutableStateOf(false) }
     var savedPackName by remember { mutableStateOf("") }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,6 +79,15 @@ fun HatSetupScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showHelpDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Help,
+                            contentDescription = "Помощь",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
@@ -175,10 +195,41 @@ fun HatSetupScreen(
                 }
 
                 if (aiSettings.token.isBlank()) {
-                    Text(
-                        text = "Настройте API токен в настройках",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
+                    val annotatedText = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp
+                            )
+                        ) {
+                            append("Настройте API токен в ")
+                            pushStringAnnotation(
+                                tag = "SETTINGS",
+                                annotation = "settings"
+                            )
+                            withStyle(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append("настройках")
+                            }
+                            pop()
+                        }
+                    }
+
+                    ClickableText(
+                        text = annotatedText,
+                        onClick = { offset ->
+                            annotatedText.getStringAnnotations(
+                                tag = "SETTINGS",
+                                start = offset,
+                                end = offset
+                            ).firstOrNull()?.let {
+                                onNavigateToSettings()
+                            }
+                        },
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -195,6 +246,51 @@ fun HatSetupScreen(
                 Text(stringResource(R.string.setup_next))
             }
         }
+    }
+
+    // Help dialog
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = { Text("Как играть в Шляпу") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Правила игры:",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text("• Игроки делятся на команды")
+                    Text("• Каждая команда по очереди объясняет слова")
+                    Text("• Один игрок из команды объясняет, остальные угадывают")
+                    Text("• За каждое угаданное слово команда получает 1 очко")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Три раунда с разными правилами:",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text("1️⃣ Объяснение - объясняйте слова любыми словами")
+                    Text("2️⃣ Пантомима - показывайте слова жестами без слов")
+                    Text("3️⃣ Одно слово - объясняйте используя только одно слово")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "💡 Совет: используйте генерацию слов с ИИ для создания тематических наборов!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHelpDialog = false }) {
+                    Text("Понятно")
+                }
+            }
+        )
     }
 
     // Dialogs

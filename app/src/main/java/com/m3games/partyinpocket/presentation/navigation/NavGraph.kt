@@ -81,6 +81,9 @@ fun NavGraph(
                     navController.navigate(Screen.HatTeams.route) {
                         popUpTo(Screen.HatSetup.route) { inclusive = false }
                     }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }

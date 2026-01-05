@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -52,6 +56,7 @@ fun HatGameScreen(
     val state = gameState ?: return
 
     var showExitDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     // Keep screen on during game play
     val context = LocalContext.current
@@ -102,6 +107,41 @@ fun HatGameScreen(
         )
     }
 
+    // Help dialog
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = { Text("Как играть в Шляпу") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Правила игры:",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text("• Один игрок из команды объясняет слова остальным")
+                    Text("• Нажмите \"Угадал\" если слово угадали")
+                    Text("• Нажмите \"Пропустить\" чтобы перейти к следующему слову")
+                    Text("• У вас ограниченное время и количество пропусков")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(state.currentRound.titleRes) + ":",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(stringResource(state.currentRound.rulesRes))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHelpDialog = false }) {
+                    Text("Понятно")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -110,6 +150,15 @@ fun HatGameScreen(
                         stringResource(state.currentRound.titleRes) +
                         " - Раунд ${state.currentRound.number}"
                     )
+                },
+                actions = {
+                    IconButton(onClick = { showHelpDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Help,
+                            contentDescription = "Помощь",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             )
         }
