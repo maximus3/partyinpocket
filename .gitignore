@@ -30,6 +30,9 @@ local.properties
 # Claude Code
 .claude/
 
+# Icon Generator
+icon-generator/.env
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -44,7 +47,7 @@ Thumbs.db
 .cxx/
 obj/
 
-# Keystore files
+# Keystore files (if needed in future)
 *.jks
 *.keystore
 

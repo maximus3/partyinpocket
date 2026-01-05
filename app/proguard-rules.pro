@@ -19,3 +19,25 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Ktor
+-dontwarn org.slf4j.**
+-dontwarn io.ktor.**
+-keep class io.ktor.** { *; }
+
+# Kotlinx Serialization
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class com.m3games.partyinpocket.**$$serializer { *; }
+-keepclassmembers class com.m3games.partyinpocket.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.m3games.partyinpocket.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}

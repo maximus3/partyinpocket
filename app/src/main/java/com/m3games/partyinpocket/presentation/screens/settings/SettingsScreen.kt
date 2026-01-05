@@ -1,5 +1,6 @@
 package com.m3games.partyinpocket.presentation.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +27,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.m3games.partyinpocket.R
 import com.m3games.partyinpocket.domain.model.AiSettings
@@ -41,6 +47,7 @@ fun SettingsScreen(
     var baseUrl by remember { mutableStateOf(aiSettings.baseUrl) }
     var model by remember { mutableStateOf(aiSettings.model) }
     var token by remember { mutableStateOf(aiSettings.token) }
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         topBar = {
@@ -65,6 +72,24 @@ fun SettingsScreen(
             Text(
                 text = "Настройки нейросети",
                 style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Получите бесплатный API ключ на ")
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    ) {
+                        append("OpenRouter")
+                    }
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.clickable {
+                    uriHandler.openUri("https://openrouter.ai/keys")
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
