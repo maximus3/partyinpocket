@@ -1,6 +1,29 @@
 # Инструкция по сборке APK для RuStore
 
-## Быстрый способ (через Makefile)
+## Быстрый способ (через Makefile + GitHub Actions)
+
+```bash
+# 1. Сгенерировать новую иконку (опционально)
+make icon PROMPT="Ваше описание иконки"
+make copy-icon
+
+# 2. Увеличить версию
+make bump-version
+
+# 3. Закоммитить и создать тег
+git add app/build.gradle.kts app/src/main/res/
+git commit -m "Bump version to 0.0.X"
+git tag v0.0.X
+git push origin main
+git push origin v0.0.X
+
+# 4. GitHub Actions автоматически:
+#    - Соберёт release и debug APK
+#    - Создаст GitHub Release с файлами
+#    - Можно скачать APK из Releases
+```
+
+## Ручная сборка (без GitHub Actions)
 
 ```bash
 # 1. Сгенерировать новую иконку (опционально)

@@ -30,12 +30,18 @@
    make build-release
    ```
 
-3. Скопируйте APK с правильным именем:
+3. Создайте тег и запушьте:
    ```bash
-   cp app/build/outputs/apk/release/app-release.apk for_release/PartyInPocket-v0.0.X.apk
+   git add app/build.gradle.kts
+   git commit -m "Bump version to 0.0.X"
+   git tag v0.0.X
+   git push origin main
+   git push origin v0.0.X
    ```
 
-4. Загрузите в RuStore:
+4. GitHub Actions автоматически создаст Release с APK файлами
+
+5. Скачайте APK из GitHub Releases и загрузите в RuStore:
    - APK из `for_release/PartyInPocket-v0.0.X.apk`
    - Иконку из `for_release/icon_512.png`
    - Описания из txt файлов
