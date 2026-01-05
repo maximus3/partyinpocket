@@ -52,6 +52,22 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Setup keystore for signing
+        run: |
+          # Create keystores directory
+          mkdir -p keystores
+
+          # Setup keystore from secrets (if exist)
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ] && [ -n "${{ secrets.KEYSTORE_PROPERTIES }}" ]; then
+            # Decode binary keystore from base64
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystores/partyinpocket-release.keystore
+            # Write text properties file directly
+            echo "${{ secrets.KEYSTORE_PROPERTIES }}" > keystore.properties
+            echo "✅ Production keystore configured"
+          else
+            echo "⚠️ No keystore secrets found, will use debug signing"
+          fi
+
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
