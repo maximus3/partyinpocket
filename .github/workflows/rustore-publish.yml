@@ -1,0 +1,179 @@
+name: Publish to RuStore
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.0.4)'
+        required: true
+      apk_path:
+        description: 'Path to APK file'
+        required: true
+        default: 'for_release/v{VERSION}/PartyInPocket-v{VERSION}.apk'
+      submit_for_review:
+        description: 'Submit for moderation after upload'
+        required: false
+        type: boolean
+        default: true
+      priority_update:
+        description: 'Priority update level (0-5)'
+        required: false
+        default: '0'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate inputs
+        run: |
+          if [ ! -f "${{ github.event.inputs.apk_path }}" ]; then
+            echo "❌ APK file not found: ${{ github.event.inputs.apk_path }}"
+            exit 1
+          fi
+          echo "✅ APK file found: ${{ github.event.inputs.apk_path }}"
+
+      - name: Read app config
+        id: config
+        run: |
+          if [ ! -f "rustore-config.json" ]; then
+            echo "❌ rustore-config.json not found"
+            exit 1
+          fi
+          echo "✅ RuStore config found"
+
+      - name: Read changelog
+        id: changelog
+        run: |
+          CHANGELOG_FILE="for_release/v${{ github.event.inputs.version }}/CHANGELOG.md"
+          if [ -f "$CHANGELOG_FILE" ]; then
+            # Remove markdown headers and format for RuStore
+            CHANGES=$(cat "$CHANGELOG_FILE" | \
+              sed 's/^##\+ //' | \
+              sed 's/^###\+ //' | \
+              sed 's/^- /• /' | \
+              sed 's/^\*\*//' | \
+              sed 's/\*\*$//' | \
+              head -c 4900)
+            if [ -z "$CHANGES" ]; then
+              CHANGES="Обновление до версии ${{ github.event.inputs.version }}"
+            fi
+          else
+            CHANGES="Обновление до версии ${{ github.event.inputs.version }}"
+          fi
+          # Escape for JSON
+          CHANGES=$(echo "$CHANGES" | jq -Rs .)
+          echo "WHATS_NEW=$CHANGES" >> $GITHUB_OUTPUT
+
+      - name: Read app info
+        id: appinfo
+        run: |
+          # Read from gradle
+          VERSION_CODE=$(grep 'versionCode =' app/build.gradle.kts | sed 's/.*= //' | tr -d ' ')
+          PACKAGE_NAME=$(grep 'applicationId =' app/build.gradle.kts | sed 's/.*= "//' | sed 's/".*//')
+
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+
+          echo "📦 Package: $PACKAGE_NAME"
+          echo "🔢 Version Code: $VERSION_CODE"
+
+      - name: Create draft version
+        id: draft
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://public-api.rustore.ru/public/v1/application/${{ steps.appinfo.outputs.PACKAGE_NAME }}/version" \
+            -H "Public-Token: ${{ secrets.RUSTORE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "whatsNew": "${{ steps.changelog.outputs.WHATS_NEW }}",
+              "minAndroidVersion": 7,
+              "publishType": "MANUAL"
+            }')
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ Failed to create draft. HTTP $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
+
+          VERSION_ID=$(echo "$BODY" | jq -r '.body')
+          echo "VERSION_ID=$VERSION_ID" >> $GITHUB_OUTPUT
+          echo "✅ Draft created with versionId: $VERSION_ID"
+
+      - name: Upload APK
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://public-api.rustore.ru/public/v1/application/${{ steps.appinfo.outputs.PACKAGE_NAME }}/version/${{ steps.draft.outputs.VERSION_ID }}/apk?isMainApk=true&servicesType=Unknown" \
+            -H "Public-Token: ${{ secrets.RUSTORE_KEY }}" \
+            -F "file=@${{ github.event.inputs.apk_path }}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "❌ Failed to upload APK. HTTP $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
+
+          echo "✅ APK uploaded successfully"
+
+      - name: Submit for moderation
+        if: ${{ github.event.inputs.submit_for_review == 'true' }}
+        run: |
+          echo "📤 Submitting draft for moderation..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://public-api.rustore.ru/public/v1/application/${{ steps.appinfo.outputs.PACKAGE_NAME }}/version/${{ steps.draft.outputs.VERSION_ID }}/commit?priorityUpdate=${{ github.event.inputs.priority_update }}" \
+            -H "Public-Token: ${{ secrets.RUSTORE_KEY }}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "⚠️ Failed to submit for moderation. HTTP $HTTP_CODE"
+            echo "$BODY"
+            echo "You can submit manually from RuStore Console"
+          else
+            echo "✅ Submitted for moderation successfully"
+          fi
+
+      - name: Summary
+        run: |
+          if [ "${{ github.event.inputs.submit_for_review }}" == "true" ]; then
+            echo "## 🎉 RuStore: Submitted for Moderation" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🎉 RuStore: Draft Created" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package:** ${{ steps.appinfo.outputs.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Code:** ${{ steps.appinfo.outputs.VERSION_CODE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Draft ID:** ${{ steps.draft.outputs.VERSION_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.submit_for_review }}" == "true" ]; then
+            echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
+            echo "Версия отправлена на модерацию RuStore" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📝 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Перейдите в [RuStore Console](https://console.rustore.ru/)" >> $GITHUB_STEP_SUMMARY
+            echo "2. Отслеживайте статус модерации" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 📝 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Перейдите в [RuStore Console](https://console.rustore.ru/)" >> $GITHUB_STEP_SUMMARY
+            echo "2. Проверьте черновик версии" >> $GITHUB_STEP_SUMMARY
+            echo "3. Отправьте на модерацию вручную" >> $GITHUB_STEP_SUMMARY
+          fi

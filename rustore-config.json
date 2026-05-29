@@ -1,0 +1,13 @@
+{
+  "appType": "GAMES",
+  "categories": ["GAME_PARTY"],
+  "ageLegal": "12+",
+  "shortDescription": "Игра Шляпа для вечеринок с генерацией слов через ИИ",
+  "fullDescription": "Вечеринка в кармане - это классическая игра 'Шляпа' для компании друзей.\n\nОсобенности:\n• Три раунда: Объяснение, Пантомима, Одно слово\n• Готовые наборы слов\n• Генерация слов с помощью ИИ по любой теме\n• Настройка времени хода, количества команд и пропусков\n• Подсчет очков и результаты\n\nИдеально для вечеринок, семейных встреч и дружеских посиделок!",
+  "developerContacts": {
+    "email": "maximyu.ivanov@yandex.ru",
+    "website": "https://github.com/imaximus3/PartyinPocket"
+  },
+  "minAndroidVersion": 7,
+  "publishType": "MANUAL"
+}
