@@ -51,12 +51,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Use production keystore if available, fallback to debug
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -72,6 +67,27 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+// Fail fast: запретить release-сборку без production keystore,
+// чтобы случайно собранный с debug-подписью APK не попал в магазин
+// (его не смогут установить поверх предыдущей версии).
+afterEvaluate {
+    tasks.matching { task ->
+        val name = task.name
+        (name.startsWith("assembleRelease") ||
+            name.startsWith("bundleRelease") ||
+            name.startsWith("packageRelease"))
+    }.configureEach {
+        doFirst {
+            check(rootProject.file("keystore.properties").exists()) {
+                "Production keystore не настроен — release-сборка прервана.\n" +
+                    "  Локально: положите keystore.properties в корень проекта.\n" +
+                    "  В CI: задайте секреты KEYSTORE_BASE64 и KEYSTORE_PROPERTIES.\n" +
+                    "  Подробности — keystores/README.md."
+            }
         }
     }
 }

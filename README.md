@@ -118,6 +118,24 @@ make test
 
 Подробности в [CLAUDE.md](CLAUDE.md#testing).
 
+## 🔐 Подпись релиз-сборок
+
+Release APK подписывается production keystore из `keystores/partyinpocket-release.keystore`. Это тот же ключ, которым подписаны все версии в RuStore начиная с v0.0.4 — без него обновление поверх установленного приложения не пройдёт (пользователю придётся удалить и поставить заново).
+
+**Локально:**
+1. В корне проекта должен лежать файл `keystore.properties` (он в `.gitignore`, не уйдёт в git).
+2. Без него `make build-release` упадёт с понятным сообщением — это специально, чтобы не подписать APK debug-ключом и не сломать обновления.
+3. Формат файла, пароли и инструкции по восстановлению: [keystores/README.md](keystores/README.md).
+
+**В GitHub Actions:**
+Сборка release/публикация требуют двух секретов в Settings → Secrets and variables → Actions:
+- `KEYSTORE_BASE64` — keystore в base64 (`base64 -i keystores/partyinpocket-release.keystore | pbcopy`)
+- `KEYSTORE_PROPERTIES` — содержимое `keystore.properties` (`cat keystore.properties | pbcopy`)
+
+Без этих секретов workflows `build.yml` и `release.yml` упадут на шаге `Setup keystore`.
+
+**Резервная копия — обязательна.** Если потеряете keystore, выпускать обновления станет невозможно (придётся публиковать как новое приложение с другим packageId). См. раздел "Создание резервной копии" в [keystores/README.md](keystores/README.md).
+
 ## 🛠 Технологии
 
 - **Язык**: Kotlin

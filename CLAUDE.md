@@ -593,18 +593,26 @@ Add tests **in parallel with implementation**:
 
 ### Release Build Process
 
-**Current setup**: Release builds use debug signing (no keystore needed) for RuStore manual publishing.
+**Signing**: Release APKs are signed with the production keystore at `keystores/partyinpocket-release.keystore`. This is the same key used for v0.0.4+ published to RuStore. Earlier versions (v0.0.1-0.0.3) used `keystores/debug-backup.keystore` — kept only as historical backup.
+
+**Required for any release build:**
+- Locally: `keystore.properties` at the project root (gitignored). Format and instructions in `keystores/README.md`.
+- In CI: GitHub Actions secrets `KEYSTORE_BASE64` and `KEYSTORE_PROPERTIES`.
+
+`build.gradle.kts` **fails fast** on `assembleRelease`/`bundleRelease`/`packageRelease` if `keystore.properties` is missing — this prevents accidentally shipping an APK signed with a per-machine debug key (which would force users to uninstall and reinstall to update).
 
 ```bash
 # 1. Update version
 make bump-version
 
-# 2. Build release APK
+# 2. Build release APK (требует keystore.properties)
 make build-release
 
-# 3. Copy for RuStore
-cp app/build/outputs/apk/release/app-release.apk PartyInPocket-v0.0.X.apk
+# 3. Copy for RuStore (если публикуете вручную)
+cp app/build/outputs/apk/release/app-release.apk PartyInPocket-v$(make info | grep versionName).apk
 ```
+
+**Если потеряли keystore**: восстановите файл из бэкапа и `keystore.properties` по инструкции в `keystores/README.md`. Без этого keystore RuStore отклонит обновление как несовместимое.
 
 ### ProGuard Configuration
 
@@ -704,7 +712,7 @@ Files ready for stores in `for_release/`:
 - `short_description.txt` - 80 char limit
 - `full_description.txt` - full app description
 
-**Current version**: 0.0.1 (versionCode: 1, versionName: "0.0.1")
+Текущая версия — `make info` или `grep versionName app/build.gradle.kts`.
 
 ## Future Improvements
 
@@ -725,9 +733,8 @@ Files ready for stores in `for_release/`:
 
 ### Low Priority / Technical Debt
 9. **DI Framework**: Consider Hilt/Koin if project complexity grows
-10. **Testing**: Add unit tests for game logic, UI tests for critical flows
+10. **UI tests**: Add Compose UI tests for critical flows (unit tests for game logic already in place)
 11. **Analytics**: Firebase Analytics for usage tracking (requires privacy policy)
-12. **Proper Signing**: Add keystore for Google Play (if publishing there in future)
 
 ### Known Limitations
 - Generated word packs don't persist after app restart (stored in memory only)

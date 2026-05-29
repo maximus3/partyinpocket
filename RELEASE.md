@@ -1,5 +1,14 @@
 # Инструкция по сборке APK для RuStore
 
+## ⚠️ Предусловие: keystore
+
+Любая release-сборка подписывается production keystore. Подробности и резервное копирование — [keystores/README.md](keystores/README.md).
+
+- **Локально**: `keystore.properties` должен лежать в корне проекта (gitignored).
+- **В CI**: настроены секреты `KEYSTORE_BASE64` и `KEYSTORE_PROPERTIES`.
+
+Без keystore release-сборка падает с понятным сообщением — это специально, чтобы не выпустить APK с debug-ключом и не сломать обновления в RuStore.
+
 ## Быстрый способ (через Makefile + GitHub Actions)
 
 ```bash
@@ -15,18 +24,21 @@ mkdir -p for_release/v0.0.X
 nano for_release/v0.0.X/CHANGELOG.md
 # Используйте for_release/CHANGELOG_TEMPLATE.md как шаблон
 
-# 4. Закоммитить и создать тег
-git add app/build.gradle.kts app/src/main/res/ for_release/v0.0.X/
+# 4. Закоммитить и создать тег (app/src/main/res/ — только если меняли иконку)
+git add app/build.gradle.kts for_release/v0.0.X/
 git commit -m "Bump version to 0.0.X"
 git tag v0.0.X
 git push origin main
 git push origin v0.0.X
 
-# 5. GitHub Actions автоматически:
-#    - Соберёт release и debug APK
+# 5. GitHub Actions release.yml автоматически:
+#    - Соберёт release и debug APK с production-подписью
 #    - Прочитает changelog из for_release/v0.0.X/CHANGELOG.md
 #    - Создаст GitHub Release с файлами и описанием
-#    - Можно скачать APK из Releases
+
+# 6. (опционально) Запустить .github/workflows/rustore-publish.yml
+#    Actions → Publish to RuStore → Run workflow → указать version=0.0.X
+#    Workflow сам скачает APK из GitHub Release и загрузит в RuStore.
 ```
 
 ## Ручная сборка (без GitHub Actions)
@@ -41,10 +53,10 @@ make copy-icon
 # 3. Увеличить версию
 make bump-version
 
-# 4. Собрать release APK
+# 4. Собрать release APK (требует keystore.properties локально)
 make build-release
 
-# 5. Переименовать и загрузить в RuStore
+# 5. Переименовать и загрузить в RuStore Console вручную
 cp app/build/outputs/apk/release/app-release.apk PartyInPocket-v$(grep versionName app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/').apk
 ```
 
@@ -102,10 +114,14 @@ defaultConfig {
 # Установка Java
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
+# Проверка: keystore.properties должен лежать в корне проекта.
+# Иначе сборка упадёт на этапе assembleRelease.
+ls keystore.properties || echo "❌ Создайте keystore.properties по инструкции в keystores/README.md"
+
 # Очистка предыдущих сборок
 ./gradlew clean
 
-# Сборка release APK (оптимизированная версия)
+# Сборка release APK (оптимизированная версия, подписана production keystore)
 ./gradlew assembleRelease
 
 # APK будет в:
@@ -149,8 +165,10 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 ## Checklist перед релизом
 
-- [ ] Новая иконка установлена и проверена
-- [ ] Версия обновлена (versionCode и versionName)
-- [ ] APK собран и протестирован на устройстве
-- [ ] APK переименован с правильной версией
-- [ ] Готов к загрузке в RuStore
+- [ ] `keystore.properties` на месте (локально) или секреты `KEYSTORE_*` настроены (в CI)
+- [ ] `make test` зелёный
+- [ ] Новая иконка установлена и проверена (если меняли)
+- [ ] Версия обновлена (`versionCode` и `versionName` через `make bump-version`)
+- [ ] Changelog положен в `for_release/v0.0.X/CHANGELOG.md`
+- [ ] APK собран и протестирован на устройстве (поверх установленной предыдущей версии — обновление проходит)
+- [ ] Готов к загрузке в RuStore (через `rustore-publish.yml` или вручную)

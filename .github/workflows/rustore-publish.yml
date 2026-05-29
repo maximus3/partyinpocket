@@ -28,13 +28,47 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate inputs
+      - name: Resolve APK path
+        id: resolve_apk
+        env:
+          APK_PATH_INPUT: ${{ github.event.inputs.apk_path }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ ! -f "${{ github.event.inputs.apk_path }}" ]; then
-            echo "❌ APK file not found: ${{ github.event.inputs.apk_path }}"
+          APK_PATH="${APK_PATH_INPUT//\{VERSION\}/$VERSION}"
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "📍 APK path: $APK_PATH"
+
+      - name: Download APK from GitHub Release if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APK_PATH: ${{ steps.resolve_apk.outputs.APK_PATH }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ -f "$APK_PATH" ]; then
+            echo "✅ APK уже есть в репозитории: $APK_PATH"
+            exit 0
+          fi
+          echo "📥 APK не найден локально, скачиваю из GitHub Release v$VERSION..."
+          mkdir -p "$(dirname "$APK_PATH")"
+          APK_NAME="PartyInPocket-v$VERSION.apk"
+          if ! gh release download "v$VERSION" \
+                 --pattern "$APK_NAME" \
+                 --output "$APK_PATH"; then
+            echo "❌ GitHub Release v$VERSION не найден или в нём нет $APK_NAME."
+            echo "   Сначала запушьте тег v$VERSION — release.yml автоматически создаст релиз."
             exit 1
           fi
-          echo "✅ APK file found: ${{ github.event.inputs.apk_path }}"
+          echo "✅ APK скачан: $APK_PATH"
+
+      - name: Validate inputs
+        env:
+          APK_PATH: ${{ steps.resolve_apk.outputs.APK_PATH }}
+        run: |
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ APK file not found: $APK_PATH"
+            exit 1
+          fi
+          echo "✅ APK file found: $APK_PATH"
 
       - name: Read app config
         id: config
@@ -110,11 +144,13 @@ jobs:
           echo "✅ Draft created with versionId: $VERSION_ID"
 
       - name: Upload APK
+        env:
+          APK_PATH: ${{ steps.resolve_apk.outputs.APK_PATH }}
         run: |
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://public-api.rustore.ru/public/v1/application/${{ steps.appinfo.outputs.PACKAGE_NAME }}/version/${{ steps.draft.outputs.VERSION_ID }}/apk?isMainApk=true&servicesType=Unknown" \
             -H "Public-Token: ${{ secrets.RUSTORE_KEY }}" \
-            -F "file=@${{ github.event.inputs.apk_path }}")
+            -F "file=@$APK_PATH")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
