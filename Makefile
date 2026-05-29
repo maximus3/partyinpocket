@@ -1,4 +1,4 @@
-.PHONY: help build build-release build-debug icon copy-icon bump-version install install-release install-debug clean info
+.PHONY: help build build-release build-debug icon copy-icon bump-version install install-release install-debug clean info test
 
 # Переменные
 JAVA_HOME := /Applications/Android Studio.app/Contents/jbr/Contents/Home
@@ -28,6 +28,9 @@ help:
 	@echo "Установка:"
 	@echo "  make install        - Установить release APK на устройство"
 	@echo "  make install-debug  - Установить debug APK на устройство"
+	@echo ""
+	@echo "Тесты:"
+	@echo "  make test           - Запустить unit-тесты"
 	@echo ""
 	@echo "Утилиты:"
 	@echo "  make clean          - Очистить build директории"
@@ -128,6 +131,13 @@ install-debug:
 	fi
 	@echo "📱 Установка debug APK..."
 	@$(ADB) install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Тесты
+test:
+	@echo "🧪 Запуск unit-тестов..."
+	@export JAVA_HOME="$(JAVA_HOME)" && $(GRADLE) testDebugUnitTest
+	@echo "✅ Тесты пройдены"
+	@echo "📊 Отчёт: app/build/reports/tests/testDebugUnitTest/index.html"
 
 # Утилиты
 clean:

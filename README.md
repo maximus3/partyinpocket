@@ -83,6 +83,41 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## 🧪 Тестирование
+
+В проекте есть unit-тесты на бизнес-логику игры "Шляпа":
+- **State machine игры** — переходы между раундами, переключение команд, таймер, сохранение времени между раундами
+- **Доменные модели** — `Team` (счёт, цвета), `HatGameState` (вычисляемые свойства), `HatRound` (порядок раундов)
+- **Управление наборами слов** — поиск, добавление и удаление сгенерированных пакетов в `PresetWordPacks`
+
+Тесты гоняются на JVM без эмулятора (~5 секунд).
+
+### Запуск тестов
+
+```bash
+# Быстрая команда через Makefile
+make test
+
+# Или напрямую через Gradle
+./gradlew testDebugUnitTest
+
+# С подробным выводом
+./gradlew testDebugUnitTest --info
+```
+
+Визуальный отчёт после запуска: `app/build/reports/tests/testDebugUnitTest/index.html`
+
+Тесты запускаются автоматически в GitHub Actions перед сборкой APK — упавший тест блокирует сборку.
+
+### Добавление тестов для новой игры
+
+При добавлении новой игры (Алиас, Крокодил, Шпион и т.д.) пишите тесты параллельно с реализацией:
+1. Тесты на доменные модели → `app/src/test/java/com/m3games/partyinpocket/domain/model/<игра>/`
+2. Тесты на ViewModel игры → `app/src/test/java/com/m3games/partyinpocket/presentation/screens/<игра>/`
+3. Перед коммитом запустите `make test` — убедитесь, что не сломался функционал старых игр.
+
+Подробности в [CLAUDE.md](CLAUDE.md#testing).
+
 ## 🛠 Технологии
 
 - **Язык**: Kotlin

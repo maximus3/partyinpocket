@@ -24,6 +24,9 @@ make install
 # Show current version info
 make info
 
+# Run unit tests
+make test
+
 # Clean build artifacts
 make clean
 ```
@@ -496,13 +499,95 @@ put("required", buildJsonArray {
 })
 ```
 
-## Testing Notes
+## Testing
 
-- No unit tests currently (MVP approach)
-- Manual testing via device/emulator
-- Use `adb logcat` for debugging crashes
-- Test rapid navigation (double-tap back button)
-- Test API error scenarios (invalid token, rate limits)
+### Unit Tests (JVM, no emulator required)
+
+Tests live in `app/src/test/java/com/m3games/partyinpocket/`.
+
+**Run all unit tests:**
+```bash
+make test
+# or directly:
+./gradlew testDebugUnitTest
+```
+
+**Test report:** `app/build/reports/tests/testDebugUnitTest/index.html`
+
+Tests run automatically in CI (`.github/workflows/build.yml`) before APK build — failing tests block the build.
+
+### What's covered
+
+- **Domain models** (`app/src/test/.../domain/model/`):
+  - `TeamTest` — score accumulation per round, color ARGB conversion (guards against `Long` regression)
+  - `HatGameStateTest` — computed properties (`currentTeam`, `currentTeamSkipsLeft`, `nextTeamIndex`, `isRoundFinished`, `isGameFinished`)
+  - `HatRoundTest` — round progression `EXPLAIN → PANTOMIME → ASSOCIATION → null`
+- **Data layer** (`app/src/test/.../data/wordpacks/`):
+  - `PresetWordPacksTest` — pack lookup, mutation of generated packs (singleton hygiene via `@After`)
+- **ViewModels** (`app/src/test/.../presentation/screens/hat/`):
+  - `HatViewModelTest` — full Hat game state machine: `startGame`, `guessWord`, `skipWord`, `nextTeam`, `nextRound`, `resetGame`, timer with `advanceTimeBy`, **time preservation between rounds**, settings updates, team management
+
+### What's NOT covered yet
+
+- **`WordGenerationService`** — Ktor HTTP. Needs MockEngine. Tracked as future work.
+- **`SettingsRepository`** — needs Android `Context`/`SharedPreferences`. Use Robolectric or instrumented test when adding.
+- **Compose screens** — instrumented tests in `app/src/androidTest/` (currently empty). Manual testing only.
+- **AI-related flows in `HatViewModel`** (`startWordGeneration`, `continueWordGeneration`, `saveGeneratedWordPack`) — depend on `WordGenerationService`.
+
+### Testing patterns
+
+**ViewModels with coroutines (timer, viewModelScope):**
+
+Use `MainDispatcherRule` from `app/src/test/.../util/MainDispatcherRule.kt` to swap `Dispatchers.Main`
+with a `TestDispatcher`. Pass the same dispatcher to `runTest` so that `advanceTimeBy` controls
+the same scheduler as `viewModelScope`:
+
+```kotlin
+@get:Rule
+val mainDispatcherRule = MainDispatcherRule()
+
+@Test
+fun `timer decrements every second`() = runTest(mainDispatcherRule.testDispatcher) {
+    viewModel.startTurn()
+    runCurrent()                  // дать корутине таймера запуститься
+    advanceTimeBy(1_000)          // пропустить 1 секунду
+    runCurrent()                  // применить эффекты delay
+    assertEquals(N - 1, viewModel.gameState.value!!.remainingTimeSeconds)
+}
+```
+
+**Singletons with mutable state (`PresetWordPacks.generatedPacks`):**
+
+Add a test pack in `@Before`, remove it in `@After`. Tests that touch `addGeneratedPack` must
+clean up to avoid pollution across test runs.
+
+```kotlin
+@Before
+fun setup() { PresetWordPacks.addGeneratedPack(testPack) }
+
+@After
+fun cleanup() { PresetWordPacks.removeGeneratedPack(testPack.id) }
+```
+
+**Determinism with shuffled word lists:**
+
+`HatViewModel.startGame` does `selectedWords.shuffled().take(wordCount)`. To keep tests
+deterministic, either:
+- Use a test pack with `words.size == wordCount` and assert on `set` membership, not order
+- Use `wordCount = 1` so `currentWord` is uniquely determined
+
+### When adding a new game
+
+Add tests **in parallel with implementation**:
+1. **Domain models** of the new game → `domain/model/<game>/<Model>Test.kt`
+2. **ViewModel** of the new game → `presentation/screens/<game>/<Game>ViewModelTest.kt`
+3. Run `make test` before pushing — make sure shared code (`Team`, navigation helpers) hasn't broken Hat game.
+
+### Manual testing (still required for UI/UX)
+
+- Rapid navigation (double-tap back button) — see `safeNavigate`/`safePopBackStack` in `NavigationExtensions.kt`
+- API error scenarios (invalid token, rate limits) — see `WordGenerationService` error mapping
+- Use `~/Library/Android/sdk/platform-tools/adb logcat -d "*:E"` for crash diagnostics
 
 ## Release & Distribution
 

@@ -70,6 +70,17 @@ jobs:
             echo "⚠️ No keystore secrets found, will use debug signing"
           fi
 
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+          retention-days: 7
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
