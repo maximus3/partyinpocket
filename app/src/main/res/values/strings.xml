@@ -5,11 +5,11 @@
     <string name="game_hat">Шляпа</string>
     <string name="game_hat_desc">Объясняй, показывай, угадывай!</string>
     <string name="game_alias">Алиас</string>
-    <string name="game_alias_desc">Скоро</string>
+    <string name="game_alias_desc">Объясняй на время</string>
     <string name="game_crocodile">Крокодил</string>
-    <string name="game_crocodile_desc">Скоро</string>
+    <string name="game_crocodile_desc">Показывай жестами</string>
     <string name="game_spy">Шпион</string>
-    <string name="game_spy_desc">Скоро</string>
+    <string name="game_spy_desc">Найди шпиона</string>
 
     <!-- Hat Game Rounds -->
     <string name="round_explain">Объяснение</string>
@@ -34,11 +34,15 @@
     <string name="setup_word_packs">Наборы слов</string>
     <string name="setup_available_words">Доступно слов: %d</string>
     <string name="setup_next">Далее</string>
+    <string name="setup_generate_ai">Сгенерировать набор с ИИ</string>
+    <string name="setup_ai_token_prompt">Настройте API токен в</string>
+    <string name="setup_ai_token_link">настройках</string>
 
     <!-- Hat Teams Screen -->
     <string name="teams_title">Команды</string>
     <string name="teams_team">Команда %d</string>
     <string name="teams_start">Начать игру</string>
+    <string name="player_name_label">Название</string>
 
     <!-- Hat Game Screen -->
     <string name="game_ready">Готовы?</string>
@@ -55,6 +59,7 @@
     <string name="turn_result_skipped">Пропущено</string>
     <string name="turn_result_points">+%d очков</string>
     <string name="turn_result_next">Следующая команда</string>
+    <string name="turn_result_waiting">Ожидание (%d сек)…</string>
     <string name="turn_result_pass_phone">Передайте телефон</string>
 
     <string name="round_result_title">Раунд %d завершён</string>
@@ -65,8 +70,118 @@
     <string name="final_result_place">%d место</string>
     <string name="final_result_play_again">Играть снова</string>
     <string name="final_result_menu">В меню</string>
+    <string name="final_table">Итоговая таблица</string>
 
     <!-- Common -->
     <string name="back">Назад</string>
     <string name="cancel">Отмена</string>
+    <string name="ok">Понятно</string>
+    <string name="help">Помощь</string>
+
+    <!-- Exit Game -->
+    <string name="exit_game_title">Выход из игры</string>
+    <string name="exit_game_text">Вы уверены, что хотите выйти? Прогресс игры не сохранится.</string>
+    <string name="exit_game_confirm">Выйти</string>
+
+    <!-- Word Generation -->
+    <string name="gen_success_title">Успешно!</string>
+    <string name="gen_success_count">Сгенерировано %d слов</string>
+    <string name="gen_partial_save_title">Сохранение</string>
+    <string name="gen_partial_save_text">Сохранить %d слов?</string>
+    <string name="gen_pack_name_label">Название набора</string>
+    <string name="gen_save">Сохранить</string>
+    <string name="gen_error_prefix">Ошибка генерации:</string>
+
+    <!-- Alias -->
+    <string name="alias_setup_title">Настройка Алиаса</string>
+    <string name="alias_win_condition">Условие победы</string>
+    <string name="alias_win_by_score">До очков</string>
+    <string name="alias_win_by_rounds">По кругам</string>
+    <string name="alias_target_score">Очков до победы</string>
+    <string name="alias_max_rounds">Кругов до конца</string>
+    <string name="alias_skip_penalty">Штраф за пропуск</string>
+    <string name="alias_round_n">Круг %d</string>
+    <string name="alias_team_score">Очков у команды: %d</string>
+    <string name="alias_explain_rule">Объясняй слова, не используя однокоренные. За каждое угаданное — +1 очко.</string>
+    <string name="alias_forbidden_label">Запретные слова:</string>
+    <string name="alias_turn_delta">Изменение за ход: %+d</string>
+    <string name="alias_total_score">Всего очков: %d</string>
+    <string name="alias_total_points">%d очков</string>
+    <string name="alias_help_title">Как играть в Алиас</string>
+    <string name="alias_help_rules">Правила игры:</string>
+    <string name="alias_help_rule_1">• Команды по очереди объясняют слова на время</string>
+    <string name="alias_help_rule_2">• За угаданное слово — +1 очко, за пропуск — штраф</string>
+    <string name="alias_help_rule_3">• Нельзя использовать однокоренные слова</string>
+    <string name="alias_help_rule_4">• Пропущенные слова возвращаются в общую кучу</string>
+    <string name="alias_help_win">Условия победы:</string>
+    <string name="alias_help_win_score">• До очков — кто первым наберёт нужное количество очков</string>
+    <string name="alias_help_win_rounds">• По кругам — после фиксированного числа кругов</string>
+
+    <!-- Crocodile -->
+    <string name="crocodile_setup_title">Настройка Крокодила</string>
+    <string name="crocodile_players">Игроков</string>
+    <string name="crocodile_target_per_player">Слов на игрока</string>
+    <string name="crocodile_use_timer">Использовать таймер</string>
+    <string name="crocodile_players_title">Игроки</string>
+    <string name="crocodile_title_short">Крокодил</string>
+    <string name="crocodile_now_showing">Показывает</string>
+    <string name="crocodile_progress">Слов угадано: %1$d / %2$d</string>
+    <string name="crocodile_explain_rule">Показывай слово жестами без звуков. За каждое угаданное — +1 очко.</string>
+    <string name="crocodile_turn_score">Угадано: %d</string>
+    <string name="crocodile_skipped">Пропущено: %d</string>
+    <string name="crocodile_finish_turn">Завершить ход</string>
+    <string name="crocodile_total_player_score">Всего у игрока: %d</string>
+    <string name="crocodile_next_player">Следующий игрок</string>
+    <string name="crocodile_winner_score">%d угаданных слов</string>
+    <string name="crocodile_help_title">Как играть в Крокодил</string>
+    <string name="crocodile_help_rule_1">• Игроки по очереди показывают слово жестами</string>
+    <string name="crocodile_help_rule_2">• Остальные угадывают вслух</string>
+    <string name="crocodile_help_rule_3">• За каждое угаданное — показывающий получает +1 очко</string>
+    <string name="crocodile_help_rule_4">• Игра идёт, пока не наберётся нужное количество слов</string>
+
+    <!-- Spy -->
+    <string name="spy_setup_title">Настройка Шпиона</string>
+    <string name="spy_players_count">Игроков</string>
+    <string name="spy_discussion_time">Время обсуждения</string>
+    <string name="spy_use_roles">Использовать роли</string>
+    <string name="spy_use_roles_hint">Каждому мирному выдаётся уникальная роль в локации</string>
+    <string name="spy_location_packs">Наборы локаций</string>
+    <string name="spy_locations_available">Доступно локаций: %d</string>
+    <string name="spy_players_title">Имена игроков</string>
+    <string name="spy_start_dealing">Раздать роли</string>
+    <string name="spy_deal_progress">Игрок %1$d из %2$d</string>
+    <string name="spy_deal_pass_phone">Передайте телефон игроку</string>
+    <string name="spy_deal_warning">Никто не должен смотреть на экран кроме игрока, держащего телефон.</string>
+    <string name="spy_deal_ready">Я готов(а)</string>
+    <string name="spy_deal_hide">Скрыть</string>
+    <string name="spy_deal_hidden">Карта скрыта</string>
+    <string name="spy_deal_pass_to_next">Передайте телефон следующему игроку</string>
+    <string name="spy_deal_next_player">Следующий игрок</string>
+    <string name="spy_deal_start_discussion">Начать обсуждение</string>
+    <string name="spy_deal_possible_locations">Возможные локации:</string>
+    <string name="spy_phase_dealing">Раздача ролей</string>
+    <string name="spy_phase_discussion">Обсуждение</string>
+    <string name="spy_phase_voting">Голосование</string>
+    <string name="spy_phase_spy_guessing">Шпион угадывает</string>
+    <string name="spy_phase_finished">Результат</string>
+    <string name="spy_discussion_hint">Задавайте друг другу вопросы про локацию. Шпион должен незаметно угадать локацию, мирные — вычислить шпиона.</string>
+    <string name="spy_finish_discussion">Завершить обсуждение</string>
+    <string name="spy_voting_hint">Кого вы подозреваете в шпионаже?</string>
+    <string name="spy_accuse">Обвинить</string>
+    <string name="spy_caught_text">%s оказался шпионом!</string>
+    <string name="spy_guess_hint">У шпиона последний шанс: угадай локацию.</string>
+    <string name="spy_winner_spy">Победил шпион!</string>
+    <string name="spy_winner_civilians">Победили мирные!</string>
+    <string name="spy_result_location_was">Локация была:</string>
+    <string name="spy_result_spy_was">Шпион: %s</string>
+    <string name="spy_result_accused_was">Обвинили: %s</string>
+    <string name="spy_result_spy_guessed">Шпион назвал локацию: %s</string>
+    <string name="spy_result_player_roles">Роли игроков:</string>
+    <string name="spy_label_spy">Шпион</string>
+    <string name="spy_help_title">Как играть в Шпиона</string>
+    <string name="spy_help_rule_1">• Один из игроков — шпион, остальные — мирные</string>
+    <string name="spy_help_rule_2">• Мирные знают локацию, шпион — нет</string>
+    <string name="spy_help_rule_3">• Задавайте друг другу вопросы про локацию</string>
+    <string name="spy_help_rule_4">• Шпион выдаёт себя — мирные побеждают</string>
+    <string name="spy_help_rule_5">• Если шпиона не нашли или он угадал локацию — побеждает шпион</string>
 </resources>

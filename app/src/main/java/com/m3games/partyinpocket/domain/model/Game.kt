@@ -23,21 +23,24 @@ sealed class Game(
         id = "alias",
         titleRes = R.string.game_alias,
         descriptionRes = R.string.game_alias_desc,
-        iconRes = R.drawable.ic_alias
+        iconRes = R.drawable.ic_alias,
+        isAvailable = true
     )
 
     data object Crocodile : Game(
         id = "crocodile",
         titleRes = R.string.game_crocodile,
         descriptionRes = R.string.game_crocodile_desc,
-        iconRes = R.drawable.ic_crocodile
+        iconRes = R.drawable.ic_crocodile,
+        isAvailable = true
     )
 
     data object Spy : Game(
         id = "spy",
         titleRes = R.string.game_spy,
         descriptionRes = R.string.game_spy_desc,
-        iconRes = R.drawable.ic_spy
+        iconRes = R.drawable.ic_spy,
+        isAvailable = true
     )
 
     companion object {
