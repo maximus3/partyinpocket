@@ -231,6 +231,8 @@ git push origin v0.0.2
 
 ## 📦 Публикация в RuStore
 
+> 📖 **Полный гайд по сборке и публикации:** [for_release/README.md](for_release/README.md) — предусловия по keystore, быстрый и ручной способы, troubleshooting и чек-лист релиза.
+
 ### Описания для магазина
 
 **Краткое описание** (до 80 символов):
@@ -304,7 +306,7 @@ git push origin v0.0.2
 
 ### Сборка и публикация вручную
 
-**Подробная инструкция:** См. [RELEASE.md](RELEASE.md)
+**Подробная инструкция:** См. [for_release/README.md](for_release/README.md)
 
 ### Быстрый старт
 
