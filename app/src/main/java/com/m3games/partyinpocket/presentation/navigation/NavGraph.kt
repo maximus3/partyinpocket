@@ -87,11 +87,8 @@ fun NavGraph(
         }
 
         composable(Screen.Settings.route) {
-            val aiSettings by settingsViewModel.aiSettings.collectAsState()
-
             SettingsScreen(
-                aiSettings = aiSettings,
-                onSaveSettings = { settings -> settingsViewModel.saveAiSettings(settings) },
+                viewModel = settingsViewModel,
                 onNavigateBack = { navController.safePopBackStack() }
             )
         }

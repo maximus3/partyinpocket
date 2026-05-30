@@ -1,7 +1,9 @@
 package com.m3games.partyinpocket.domain.model
 
 data class AiSettings(
-    val baseUrl: String = "https://openrouter.ai/api/v1/chat/completions",
-    val model: String = "mistralai/devstral-2512:free",
-    val token: String = ""
+    val provider: AiProvider = AiProvider.OpenRouter,
+    val baseUrl: String = AiProvider.OpenRouter.defaultBaseUrl,
+    val model: String = AiProvider.OpenRouter.defaultModel,
+    val token: String = "",
+    val useFreeOnly: Boolean = true
 )

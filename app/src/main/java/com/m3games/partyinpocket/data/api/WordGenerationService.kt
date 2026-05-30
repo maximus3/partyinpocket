@@ -137,9 +137,9 @@ class WordGenerationService {
 
                 val errorMessage = when (errorResponse.error.code) {
                     401 -> "Неверный API токен. Проверьте настройки."
-                    403 -> "Превышен лимит API ключа. Проверьте лимиты на https://openrouter.ai/settings/keys"
-                    429 -> "Слишком много запросов. Попробуйте позже."
-                    else -> "Ошибка API: ${errorResponse.error.message}"
+                    403 -> "Превышен лимит API ключа. Попробуйте другую модель или проверьте лимиты на https://openrouter.ai/settings/keys"
+                    429 -> "Слишком много запросов. Попробуйте другую модель или повторите позже."
+                    else -> "Ошибка API: ${errorResponse.error.message}. Попробуйте выбрать другую модель."
                 }
 
                 return Result.failure(Exception(errorMessage))
