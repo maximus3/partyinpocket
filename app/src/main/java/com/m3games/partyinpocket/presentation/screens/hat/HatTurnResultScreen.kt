@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.m3games.partyinpocket.R
+import com.m3games.partyinpocket.presentation.components.LastWordCard
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +122,17 @@ fun HatTurnResultScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val lastWord = state.currentWord
+            if (lastWord != null) {
+                LastWordCard(
+                    displayWord = lastWord,
+                    isAccepted = lastWord in state.guessedInTurn,
+                    onToggle = { viewModel.toggleLastWordAccepted() }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             LazyColumn(
                 modifier = Modifier

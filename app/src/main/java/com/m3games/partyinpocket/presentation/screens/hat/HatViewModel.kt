@@ -59,6 +59,10 @@ class HatViewModel : ViewModel() {
         _settings.value = _settings.value.copy(maxSkipsPerTurn = skips)
     }
 
+    fun updateSkipPenalty(penalty: Int) {
+        _settings.value = _settings.value.copy(skipPenalty = penalty)
+    }
+
     fun toggleWordPack(packId: String) {
         val currentPacks = _settings.value.selectedPacks.toMutableList()
         if (currentPacks.contains(packId)) {
@@ -249,6 +253,37 @@ class HatViewModel : ViewModel() {
         _gameState.value = state.copy(
             phase = HatGamePhase.TURN_ENDED
         )
+    }
+
+    /**
+     * Включает/выключает зачёт слова, оставшегося на экране в конце хода.
+     * Если слово ещё не зачтено — добавляет его в guessedInTurn, +1 очко команде, убирает из колоды.
+     * Если уже зачтено — откатывает.
+     */
+    fun toggleLastWordAccepted() {
+        val state = _gameState.value ?: return
+        if (state.phase != HatGamePhase.TURN_ENDED) return
+        val pending = state.currentWord ?: return
+
+        if (pending in state.guessedInTurn) {
+            val updatedTeams = state.teams.mapIndexed { index, team ->
+                if (index == state.currentTeamIndex) team.withScore(state.currentRound, -1) else team
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn.filterNot { it == pending },
+                remainingWords = listOf(pending) + state.remainingWords,
+                teams = updatedTeams
+            )
+        } else {
+            val updatedTeams = state.teams.mapIndexed { index, team ->
+                if (index == state.currentTeamIndex) team.withScore(state.currentRound, 1) else team
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn + pending,
+                remainingWords = state.remainingWords.drop(1),
+                teams = updatedTeams
+            )
+        }
     }
 
     fun nextTeam() {

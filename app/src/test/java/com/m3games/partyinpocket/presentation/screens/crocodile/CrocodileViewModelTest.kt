@@ -403,6 +403,63 @@ class CrocodileViewModelTest {
         assertEquals(CrocodileSettings(), viewModel.settings.value)
     }
 
+    // ───── toggleLastWordAccepted ─────
+
+    @Test
+    fun `toggleLastWordAccepted accepts the remaining word and gives player plus one`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGame(durationSeconds = 5)
+        viewModel.startTurn()
+        runCurrent()
+        val pending = viewModel.gameState.value!!.currentWord!!
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+        assertEquals(CrocodileGamePhase.TURN_ENDED, viewModel.gameState.value!!.phase)
+
+        viewModel.toggleLastWordAccepted()
+
+        val state = viewModel.gameState.value!!
+        assertTrue(pending in state.guessedInTurn)
+        assertEquals(1, state.players[0].score)
+        assertFalse(pending in state.remainingWords)
+    }
+
+    @Test
+    fun `toggleLastWordAccepted twice reverts to original state`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGame(durationSeconds = 5)
+        viewModel.startTurn()
+        runCurrent()
+        val pending = viewModel.gameState.value!!.currentWord!!
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+
+        viewModel.toggleLastWordAccepted()
+        viewModel.toggleLastWordAccepted()
+
+        val state = viewModel.gameState.value!!
+        assertFalse(pending in state.guessedInTurn)
+        assertEquals(0, state.players[0].score)
+        assertTrue(pending in state.remainingWords)
+    }
+
+    @Test
+    fun `toggleLastWordAccepted is no-op outside TURN_ENDED phase`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGame()
+        viewModel.startTurn()
+        runCurrent()
+        val before = viewModel.gameState.value!!
+
+        viewModel.toggleLastWordAccepted()
+
+        assertEquals(before, viewModel.gameState.value)
+    }
+
+    @Test
+    fun `updateSkipPenalty updates settings`() {
+        viewModel.updateSkipPenalty(2)
+
+        assertEquals(2, viewModel.settings.value.skipPenalty)
+    }
+
     // ───── Timer ─────
 
     @Test

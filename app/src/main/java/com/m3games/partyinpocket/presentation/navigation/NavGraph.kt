@@ -437,14 +437,18 @@ fun NavGraph(
         // ─── Spy Game Flow ───
 
         composable(Screen.SpySetup.route) {
+            val aiSettings by settingsViewModel.aiSettings.collectAsState()
+
             SpySetupScreen(
                 viewModel = spyViewModel,
+                aiSettings = aiSettings,
                 onNavigateBack = { navController.safePopBackStack() },
                 onNavigateToPlayers = {
                     navController.navigate(Screen.SpyPlayers.route) {
                         popUpTo(Screen.SpySetup.route) { inclusive = false }
                     }
-                }
+                },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
 

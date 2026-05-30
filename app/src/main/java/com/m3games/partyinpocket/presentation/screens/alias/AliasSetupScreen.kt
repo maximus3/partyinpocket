@@ -115,8 +115,8 @@ fun AliasSetupScreen(
                 Slider(
                     value = settings.teamCount.toFloat(),
                     onValueChange = { viewModel.updateTeamCount(it.roundToInt()) },
-                    valueRange = 2f..10f,
-                    steps = 7
+                    valueRange = 2f..20f,
+                    steps = 17
                 )
             }
 
@@ -203,7 +203,7 @@ fun AliasSetupScreen(
             // Skip Penalty
             Column {
                 Text(
-                    text = "${stringResource(R.string.alias_skip_penalty)}: ${settings.skipPenalty}",
+                    text = "${stringResource(R.string.setup_skip_penalty)}: ${settings.skipPenalty}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Slider(

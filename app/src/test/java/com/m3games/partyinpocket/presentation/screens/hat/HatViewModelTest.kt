@@ -580,6 +580,82 @@ class HatViewModelTest {
         assertEquals(HatSettings(), viewModel.settings.value)
     }
 
+    // ───── toggleLastWordAccepted ─────
+
+    @Test
+    fun `toggleLastWordAccepted accepts the remaining word and gives the team plus one`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGameWithDefaults(durationSeconds = 5)
+        viewModel.startTurn()
+        runCurrent()
+        val pending = viewModel.gameState.value!!.currentWord!!
+        // Кончается таймер → TURN_ENDED, currentWord остался
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+        assertEquals(HatGamePhase.TURN_ENDED, viewModel.gameState.value!!.phase)
+
+        viewModel.toggleLastWordAccepted()
+
+        val state = viewModel.gameState.value!!
+        assertTrue(pending in state.guessedInTurn)
+        assertEquals(1, state.teams[0].scores[HatRound.EXPLAIN])
+        assertFalse(pending in state.remainingWords)
+    }
+
+    @Test
+    fun `toggleLastWordAccepted twice reverts to original state`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGameWithDefaults(durationSeconds = 5)
+        viewModel.startTurn()
+        runCurrent()
+        val pending = viewModel.gameState.value!!.currentWord!!
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+
+        viewModel.toggleLastWordAccepted()
+        viewModel.toggleLastWordAccepted()
+
+        val state = viewModel.gameState.value!!
+        assertFalse(pending in state.guessedInTurn)
+        assertEquals(0, state.teams[0].totalScore)
+        assertTrue(pending in state.remainingWords)
+    }
+
+    @Test
+    fun `toggleLastWordAccepted is no-op outside of TURN_ENDED phase`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGameWithDefaults()
+        viewModel.startTurn()
+        runCurrent()
+        val before = viewModel.gameState.value!!
+
+        viewModel.toggleLastWordAccepted()
+
+        assertEquals(before, viewModel.gameState.value)
+    }
+
+    @Test
+    fun `toggleLastWordAccepted is no-op when currentWord is null`() = runTest(mainDispatcherRule.testDispatcher) {
+        startGameWithDefaults(wordCount = 1)
+        viewModel.startTurn()
+        runCurrent()
+        viewModel.guessWord()
+        // После guess last word: phase=TURN_ENDED, currentWord=null
+        val before = viewModel.gameState.value!!
+        assertEquals(HatGamePhase.TURN_ENDED, before.phase)
+        assertEquals(null, before.currentWord)
+
+        viewModel.toggleLastWordAccepted()
+
+        assertEquals(before, viewModel.gameState.value)
+    }
+
+    // ───── updateSkipPenalty ─────
+
+    @Test
+    fun `updateSkipPenalty updates settings`() {
+        viewModel.updateSkipPenalty(2)
+
+        assertEquals(2, viewModel.settings.value.skipPenalty)
+    }
+
     // ───── Timer ─────
 
     @Test

@@ -112,8 +112,8 @@ fun CrocodileSetupScreen(
                 Slider(
                     value = settings.playerCount.toFloat(),
                     onValueChange = { viewModel.updatePlayerCount(it.roundToInt()) },
-                    valueRange = 2f..10f,
-                    steps = 7
+                    valueRange = 2f..20f,
+                    steps = 17
                 )
             }
 
@@ -162,7 +162,7 @@ fun CrocodileSetupScreen(
 
             Column {
                 Text(
-                    text = "${stringResource(R.string.setup_skips)}: ${settings.maxSkipsPerTurn}",
+                    text = "${stringResource(R.string.setup_skips_per_player)}: ${settings.maxSkipsPerTurn}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Slider(
@@ -170,6 +170,19 @@ fun CrocodileSetupScreen(
                     onValueChange = { viewModel.updateMaxSkips(it.roundToInt()) },
                     valueRange = 0f..10f,
                     steps = 9
+                )
+            }
+
+            Column {
+                Text(
+                    text = "${stringResource(R.string.setup_skip_penalty)}: ${settings.skipPenalty}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Slider(
+                    value = settings.skipPenalty.toFloat(),
+                    onValueChange = { viewModel.updateSkipPenalty(it.roundToInt()) },
+                    valueRange = 0f..3f,
+                    steps = 2
                 )
             }
 

@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,6 +24,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -35,22 +40,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.m3games.partyinpocket.R
 import com.m3games.partyinpocket.data.spy.PresetSpyLocations
+import com.m3games.partyinpocket.domain.model.AiSettings
+import com.m3games.partyinpocket.domain.model.WordGenerationState
+import com.m3games.partyinpocket.presentation.components.ErrorDialog
+import com.m3games.partyinpocket.presentation.components.PartialGenerationDialog
+import com.m3games.partyinpocket.presentation.components.ThemeInputDialog
+import com.m3games.partyinpocket.presentation.components.WordGenerationProgressDialog
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SpySetupScreen(
     viewModel: SpyViewModel,
+    aiSettings: AiSettings,
     onNavigateBack: () -> Unit,
-    onNavigateToPlayers: () -> Unit
+    onNavigateToPlayers: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val settings by viewModel.settings.collectAsState()
+    val generationState by viewModel.wordGenerationState.collectAsState()
     val allPacks = PresetSpyLocations.getAll()
 
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var currentTheme by remember { mutableStateOf("") }
+    var showSuccessNameDialog by remember { mutableStateOf(false) }
+    var showPartialNameDialog by remember { mutableStateOf(false) }
+    var savedPackName by remember { mutableStateOf("") }
+    val targetGenerationCount = 30
 
     Scaffold(
         topBar = {
@@ -89,8 +114,8 @@ fun SpySetupScreen(
                 Slider(
                     value = settings.playerCount.toFloat(),
                     onValueChange = { viewModel.updatePlayerCount(it.roundToInt()) },
-                    valueRange = 3f..10f,
-                    steps = 6
+                    valueRange = 3f..20f,
+                    steps = 16
                 )
             }
 
@@ -155,6 +180,50 @@ fun SpySetupScreen(
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { showThemeDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = aiSettings.token.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.spy_generate_locations_ai))
+                }
+
+                if (aiSettings.token.isBlank()) {
+                    val annotatedText = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp
+                            )
+                        ) {
+                            append(stringResource(R.string.setup_ai_token_prompt) + " ")
+                            pushStringAnnotation(tag = "SETTINGS", annotation = "settings")
+                            withStyle(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append(stringResource(R.string.setup_ai_token_link))
+                            }
+                            pop()
+                        }
+                    }
+                    ClickableText(
+                        text = annotatedText,
+                        onClick = { offset ->
+                            annotatedText.getStringAnnotations(
+                                tag = "SETTINGS",
+                                start = offset,
+                                end = offset
+                            ).firstOrNull()?.let { onNavigateToSettings() }
+                        },
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
 
             Button(
@@ -167,6 +236,126 @@ fun SpySetupScreen(
                 Text(stringResource(R.string.setup_next))
             }
         }
+    }
+
+    if (showThemeDialog) {
+        ThemeInputDialog(
+            targetWordCount = targetGenerationCount,
+            onDismiss = { showThemeDialog = false },
+            onConfirm = { theme ->
+                currentTheme = theme
+                showThemeDialog = false
+                viewModel.startLocationGeneration(theme, targetGenerationCount, aiSettings)
+            }
+        )
+    }
+
+    when (val state = generationState) {
+        is WordGenerationState.Loading -> {
+            WordGenerationProgressDialog(
+                attempt = state.attempt,
+                currentCount = state.generatedCount,
+                targetCount = targetGenerationCount
+            )
+        }
+
+        is WordGenerationState.Success -> {
+            if (!showSuccessNameDialog) {
+                showSuccessNameDialog = true
+                savedPackName = currentTheme
+            }
+
+            if (showSuccessNameDialog) {
+                AlertDialog(
+                    onDismissRequest = {},
+                    title = { Text(stringResource(R.string.gen_success_title)) },
+                    text = {
+                        androidx.compose.foundation.layout.Column {
+                            Text(stringResource(R.string.spy_gen_success_count, state.words.size))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = savedPackName,
+                                onValueChange = { savedPackName = it },
+                                label = { Text(stringResource(R.string.gen_pack_name_label)) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.saveGeneratedLocationPack(savedPackName, state.words)
+                                showSuccessNameDialog = false
+                            }
+                        ) { Text(stringResource(R.string.gen_save)) }
+                    }
+                )
+            }
+        }
+
+        is WordGenerationState.PartialSuccess -> {
+            if (showPartialNameDialog) {
+                AlertDialog(
+                    onDismissRequest = {},
+                    title = { Text(stringResource(R.string.gen_partial_save_title)) },
+                    text = {
+                        androidx.compose.foundation.layout.Column {
+                            Text(stringResource(R.string.spy_gen_partial_save_text, state.words.size))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = savedPackName,
+                                onValueChange = { savedPackName = it },
+                                label = { Text(stringResource(R.string.gen_pack_name_label)) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.saveGeneratedLocationPack(savedPackName, state.words)
+                                showPartialNameDialog = false
+                            }
+                        ) { Text(stringResource(R.string.gen_save)) }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showPartialNameDialog = false
+                                viewModel.resetWordGenerationState()
+                            }
+                        ) { Text(stringResource(R.string.cancel)) }
+                    }
+                )
+            } else {
+                PartialGenerationDialog(
+                    generatedCount = state.words.size,
+                    targetCount = state.targetCount,
+                    attempts = state.attempts,
+                    onContinue = {
+                        viewModel.continueLocationGeneration(
+                            currentLocations = state.words,
+                            targetCount = state.targetCount,
+                            theme = currentTheme,
+                            aiSettings = aiSettings
+                        )
+                    },
+                    onAccept = {
+                        savedPackName = currentTheme
+                        showPartialNameDialog = true
+                    }
+                )
+            }
+        }
+
+        is WordGenerationState.Error -> {
+            ErrorDialog(
+                message = "${stringResource(R.string.gen_error_prefix)} ${state.message}",
+                onDismiss = { viewModel.resetWordGenerationState() }
+            )
+        }
+
+        WordGenerationState.Idle -> {}
     }
 
     if (showHelpDialog) {

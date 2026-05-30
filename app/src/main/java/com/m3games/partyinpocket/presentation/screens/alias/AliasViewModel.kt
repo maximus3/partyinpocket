@@ -235,6 +235,35 @@ class AliasViewModel : ViewModel() {
         _gameState.value = state.copy(phase = AliasGamePhase.TURN_ENDED)
     }
 
+    /**
+     * Включает/выключает зачёт слова, оставшегося в конце хода.
+     */
+    fun toggleLastWordAccepted() {
+        val state = _gameState.value ?: return
+        if (state.phase != AliasGamePhase.TURN_ENDED) return
+        val pending = state.currentWord ?: return
+
+        if (pending in state.guessedInTurn) {
+            val updatedTeams = state.teams.mapIndexed { index, team ->
+                if (index == state.currentTeamIndex) team.withScore(-1) else team
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn.filterNot { it == pending },
+                remainingWords = listOf(pending) + state.remainingWords,
+                teams = updatedTeams
+            )
+        } else {
+            val updatedTeams = state.teams.mapIndexed { index, team ->
+                if (index == state.currentTeamIndex) team.withScore(1) else team
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn + pending,
+                remainingWords = state.remainingWords.drop(1),
+                teams = updatedTeams
+            )
+        }
+    }
+
     fun nextTeam() {
         val state = _gameState.value ?: return
 

@@ -79,9 +79,19 @@ object PresetSpyLocations {
         )
     )
 
-    fun getAll(): List<SpyLocationPack> = listOf(default, fantasy, office)
+    private val generatedPacks = mutableListOf<SpyLocationPack>()
+
+    fun getAll(): List<SpyLocationPack> = listOf(default, fantasy, office) + generatedPacks
 
     fun getById(id: String): SpyLocationPack? = getAll().find { it.id == id }
 
     fun getByIds(ids: List<String>): List<SpyLocationPack> = ids.mapNotNull { getById(it) }
+
+    fun addGeneratedPack(pack: SpyLocationPack) {
+        generatedPacks.add(pack)
+    }
+
+    fun removeGeneratedPack(id: String) {
+        generatedPacks.removeAll { it.id == id }
+    }
 }

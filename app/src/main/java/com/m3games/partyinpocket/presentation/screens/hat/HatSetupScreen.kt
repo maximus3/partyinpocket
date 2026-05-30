@@ -110,8 +110,8 @@ fun HatSetupScreen(
                 Slider(
                     value = settings.teamCount.toFloat(),
                     onValueChange = { viewModel.updateTeamCount(it.roundToInt()) },
-                    valueRange = 2f..10f,
-                    steps = 7
+                    valueRange = 2f..20f,
+                    steps = 17
                 )
             }
 
@@ -154,6 +154,20 @@ fun HatSetupScreen(
                     onValueChange = { viewModel.updateMaxSkips(it.roundToInt()) },
                     valueRange = 0f..15f,
                     steps = 14
+                )
+            }
+
+            // Skip Penalty
+            Column {
+                Text(
+                    text = "${stringResource(R.string.setup_skip_penalty)}: ${settings.skipPenalty}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Slider(
+                    value = settings.skipPenalty.toFloat(),
+                    onValueChange = { viewModel.updateSkipPenalty(it.roundToInt()) },
+                    valueRange = 0f..3f,
+                    steps = 2
                 )
             }
 

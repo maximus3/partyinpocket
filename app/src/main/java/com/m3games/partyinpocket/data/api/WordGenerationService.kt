@@ -50,7 +50,7 @@ class WordGenerationService {
         }
     }
 
-    private val systemPrompt = """
+    private val defaultSystemPrompt = """
         Ты помощник для генерации слов для игры "Шляпа" (Hat Game).
 
         Правила игры:
@@ -76,7 +76,8 @@ class WordGenerationService {
         theme: String,
         targetCount: Int,
         settings: AiSettings,
-        existingWords: Set<String> = emptySet()
+        existingWords: Set<String> = emptySet(),
+        systemPrompt: String = defaultSystemPrompt
     ): Result<List<String>> {
         return try {
             val userPrompt = if (existingWords.isEmpty()) {
@@ -171,6 +172,7 @@ class WordGenerationService {
         targetCount: Int,
         settings: AiSettings,
         maxAttempts: Int = 3,
+        systemPrompt: String = defaultSystemPrompt,
         onProgress: (attempt: Int, currentCount: Int) -> Unit
     ): Result<Pair<List<String>, Boolean>> {
         val allWords = mutableSetOf<String>()
@@ -180,7 +182,7 @@ class WordGenerationService {
             attempt++
             onProgress(attempt, allWords.size)
 
-            val result = generateWords(theme, targetCount, settings, allWords)
+            val result = generateWords(theme, targetCount, settings, allWords, systemPrompt)
 
             if (result.isSuccess) {
                 val newWords = result.getOrNull() ?: emptyList()

@@ -241,6 +241,35 @@ class CrocodileViewModel : ViewModel() {
         _gameState.value = state.copy(phase = CrocodileGamePhase.TURN_ENDED)
     }
 
+    /**
+     * Включает/выключает зачёт слова, оставшегося в конце хода.
+     */
+    fun toggleLastWordAccepted() {
+        val state = _gameState.value ?: return
+        if (state.phase != CrocodileGamePhase.TURN_ENDED) return
+        val pending = state.currentWord ?: return
+
+        if (pending in state.guessedInTurn) {
+            val updatedPlayers = state.players.mapIndexed { index, player ->
+                if (index == state.currentPlayerIndex) player.withScore(-1) else player
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn.filterNot { it == pending },
+                remainingWords = listOf(pending) + state.remainingWords,
+                players = updatedPlayers
+            )
+        } else {
+            val updatedPlayers = state.players.mapIndexed { index, player ->
+                if (index == state.currentPlayerIndex) player.withScore(1) else player
+            }
+            _gameState.value = state.copy(
+                guessedInTurn = state.guessedInTurn + pending,
+                remainingWords = state.remainingWords.drop(1),
+                players = updatedPlayers
+            )
+        }
+    }
+
     fun nextPlayer() {
         val state = _gameState.value ?: return
 

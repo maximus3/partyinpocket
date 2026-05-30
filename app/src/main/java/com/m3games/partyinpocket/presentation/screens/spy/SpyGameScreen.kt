@@ -127,7 +127,7 @@ fun SpyGameScreen(
                 SpyGamePhase.GAME_FINISHED -> ResultContent(
                     state = state,
                     onPlayAgain = {
-                        viewModel.resetGame()
+                        viewModel.resetGameKeepSetup()
                         onPlayAgain()
                     },
                     onHome = {

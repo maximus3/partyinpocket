@@ -2,13 +2,17 @@ package com.m3games.partyinpocket.presentation.screens.spy
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.m3games.partyinpocket.data.api.WordGenerationService
 import com.m3games.partyinpocket.data.spy.PresetSpyLocations
+import com.m3games.partyinpocket.domain.model.AiSettings
+import com.m3games.partyinpocket.domain.model.WordGenerationState
 import com.m3games.partyinpocket.domain.model.common.HiddenCard
 import com.m3games.partyinpocket.domain.model.common.HiddenDealState
 import com.m3games.partyinpocket.domain.model.spy.SpyGamePhase
 import com.m3games.partyinpocket.domain.model.spy.SpyGameState
 import com.m3games.partyinpocket.domain.model.spy.SpyGameWinner
 import com.m3games.partyinpocket.domain.model.spy.SpyLocation
+import com.m3games.partyinpocket.domain.model.spy.SpyLocationPack
 import com.m3games.partyinpocket.domain.model.spy.SpyPlayer
 import com.m3games.partyinpocket.domain.model.spy.SpyRole
 import com.m3games.partyinpocket.domain.model.spy.SpySettings
@@ -20,6 +24,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SpyViewModel : ViewModel() {
+    private val wordGenerationService = WordGenerationService()
+
+    private val locationsSystemPrompt = """
+        Ты помощник для генерации локаций для игры "Шпион".
+
+        Правила:
+        - Каждая локация — это конкретное публичное место (например: бар, аэропорт, корабль, школа).
+        - Локация должна быть достаточно узнаваемой, чтобы у игроков были общие ассоциации с ней.
+        - Локация — нарицательное существительное в именительном падеже единственного числа.
+        - Русский язык.
+        - Локации должны быть уникальными (без повторений).
+        - Длина: от 3 до 30 символов.
+        - Локации должны соответствовать заданной теме.
+
+        Верни JSON объект со списком локаций в формате: {"words": ["локация1", "локация2", ...]}
+    """.trimIndent()
+
     private val _settings = MutableStateFlow(SpySettings())
     val settings: StateFlow<SpySettings> = _settings.asStateFlow()
 
@@ -28,6 +49,9 @@ class SpyViewModel : ViewModel() {
 
     private val _gameState = MutableStateFlow<SpyGameState?>(null)
     val gameState: StateFlow<SpyGameState?> = _gameState.asStateFlow()
+
+    private val _wordGenerationState = MutableStateFlow<WordGenerationState>(WordGenerationState.Idle)
+    val wordGenerationState: StateFlow<WordGenerationState> = _wordGenerationState.asStateFlow()
 
     private var timerJob: Job? = null
 
@@ -64,8 +88,11 @@ class SpyViewModel : ViewModel() {
     // ─── Players ───
 
     fun initializePlayers() {
-        val playerCount = _settings.value.playerCount
-        _playerNames.value = List(playerCount) { index -> "Игрок ${index + 1}" }
+        val target = _settings.value.playerCount
+        val current = _playerNames.value
+        _playerNames.value = List(target) { index ->
+            current.getOrNull(index) ?: "Игрок ${index + 1}"
+        }
     }
 
     fun updatePlayerName(index: Int, name: String) {
@@ -226,8 +253,111 @@ class SpyViewModel : ViewModel() {
         _settings.value = SpySettings()
     }
 
+    /**
+     * Сбрасывает только игровой раунд, сохраняя текущие настройки и список имён.
+     * Используется для повтора партии с теми же игроками.
+     */
+    fun resetGameKeepSetup() {
+        timerJob?.cancel()
+        _gameState.value = null
+    }
+
+    // ─── Location AI Generation ───
+
+    fun startLocationGeneration(theme: String, targetCount: Int, aiSettings: AiSettings) {
+        viewModelScope.launch {
+            _wordGenerationState.value = WordGenerationState.Loading(1, 0)
+
+            val result = wordGenerationService.generateWordsWithRetry(
+                theme = theme,
+                targetCount = targetCount,
+                settings = aiSettings,
+                maxAttempts = 3,
+                systemPrompt = locationsSystemPrompt
+            ) { attempt, currentCount ->
+                _wordGenerationState.value = WordGenerationState.Loading(attempt, currentCount)
+            }
+
+            if (result.isSuccess) {
+                val (locations, isComplete) = result.getOrNull()!!
+                _wordGenerationState.value = if (isComplete || locations.size >= targetCount) {
+                    WordGenerationState.Success(locations)
+                } else {
+                    WordGenerationState.PartialSuccess(
+                        words = locations,
+                        attempts = 3,
+                        targetCount = targetCount
+                    )
+                }
+            } else {
+                _wordGenerationState.value = WordGenerationState.Error(
+                    result.exceptionOrNull()?.message ?: "Неизвестная ошибка"
+                )
+            }
+        }
+    }
+
+    fun continueLocationGeneration(currentLocations: List<String>, targetCount: Int, theme: String, aiSettings: AiSettings) {
+        viewModelScope.launch {
+            _wordGenerationState.value = WordGenerationState.Loading(1, currentLocations.size)
+
+            val result = wordGenerationService.generateWordsWithRetry(
+                theme = theme,
+                targetCount = targetCount,
+                settings = aiSettings,
+                maxAttempts = 3,
+                systemPrompt = locationsSystemPrompt
+            ) { attempt, currentCount ->
+                _wordGenerationState.value = WordGenerationState.Loading(attempt, currentCount + currentLocations.size)
+            }
+
+            if (result.isSuccess) {
+                val (newLocations, isComplete) = result.getOrNull()!!
+                val allLocations = (currentLocations + newLocations).distinct()
+                _wordGenerationState.value = if (isComplete || allLocations.size >= targetCount) {
+                    WordGenerationState.Success(allLocations)
+                } else {
+                    WordGenerationState.PartialSuccess(
+                        words = allLocations,
+                        attempts = 6,
+                        targetCount = targetCount
+                    )
+                }
+            } else {
+                _wordGenerationState.value = WordGenerationState.Error(
+                    result.exceptionOrNull()?.message ?: "Неизвестная ошибка"
+                )
+            }
+        }
+    }
+
+    fun saveGeneratedLocationPack(name: String, locations: List<String>) {
+        val packId = "generated_spy_${System.currentTimeMillis()}"
+        val pack = SpyLocationPack(
+            id = packId,
+            name = name,
+            description = "Сгенерированный набор",
+            locations = locations.map { SpyLocation(name = it, roles = emptyList()) }
+        )
+
+        val currentPacks = _settings.value.selectedLocationPacks.toMutableList()
+        if (!currentPacks.contains(packId)) {
+            currentPacks.add(packId)
+        }
+        _settings.value = _settings.value.copy(selectedLocationPacks = currentPacks)
+
+        PresetSpyLocations.addGeneratedPack(pack)
+
+        resetWordGenerationState()
+    }
+
+    fun resetWordGenerationState() {
+        _wordGenerationState.value = WordGenerationState.Idle
+    }
+
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        wordGenerationService.close()
     }
 }

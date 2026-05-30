@@ -31,6 +31,8 @@
     <string name="setup_words">Слов</string>
     <string name="setup_time">Время на ход (сек)</string>
     <string name="setup_skips">Пропусков на команду</string>
+    <string name="setup_skips_per_player">Пропусков на игрока</string>
+    <string name="setup_skip_penalty">Штраф за пропуск</string>
     <string name="setup_word_packs">Наборы слов</string>
     <string name="setup_available_words">Доступно слов: %d</string>
     <string name="setup_next">Далее</string>
@@ -61,6 +63,11 @@
     <string name="turn_result_next">Следующая команда</string>
     <string name="turn_result_waiting">Ожидание (%d сек)…</string>
     <string name="turn_result_pass_phone">Передайте телефон</string>
+    <string name="last_word_label_missed">Не успели угадать слово</string>
+    <string name="last_word_label_accepted">Слово зачтено</string>
+    <string name="last_word_show">Показать слово</string>
+    <string name="last_word_accept">Засчитать</string>
+    <string name="last_word_undo">Убрать</string>
 
     <string name="round_result_title">Раунд %d завершён</string>
     <string name="round_result_next_round">Следующий раунд</string>
@@ -99,7 +106,6 @@
     <string name="alias_win_by_rounds">По кругам</string>
     <string name="alias_target_score">Очков до победы</string>
     <string name="alias_max_rounds">Кругов до конца</string>
-    <string name="alias_skip_penalty">Штраф за пропуск</string>
     <string name="alias_round_n">Круг %d</string>
     <string name="alias_team_score">Очков у команды: %d</string>
     <string name="alias_explain_rule">Объясняй слова, не используя однокоренные. За каждое угаданное — +1 очко.</string>
@@ -147,6 +153,9 @@
     <string name="spy_use_roles_hint">Каждому мирному выдаётся уникальная роль в локации</string>
     <string name="spy_location_packs">Наборы локаций</string>
     <string name="spy_locations_available">Доступно локаций: %d</string>
+    <string name="spy_generate_locations_ai">Сгенерировать локации с ИИ</string>
+    <string name="spy_gen_success_count">Сгенерировано %d локаций (роли не назначаются)</string>
+    <string name="spy_gen_partial_save_text">Сохранить %d локаций?</string>
     <string name="spy_players_title">Имена игроков</string>
     <string name="spy_start_dealing">Раздать роли</string>
     <string name="spy_deal_progress">Игрок %1$d из %2$d</string>

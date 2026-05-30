@@ -446,4 +446,59 @@ class SpyViewModelTest {
         assertEquals(emptyList<String>(), viewModel.playerNames.value)
         assertEquals(SpySettings(), viewModel.settings.value)
     }
+
+    @Test
+    fun `resetGameKeepSetup clears game but keeps settings and player names`() {
+        configureSettings(playerCount = 5, discussionSeconds = 240)
+        viewModel.initializePlayers()
+        viewModel.updatePlayerName(0, "Алиса")
+        viewModel.updatePlayerName(1, "Боб")
+        viewModel.startGame()
+        assertNotNull(viewModel.gameState.value)
+
+        viewModel.resetGameKeepSetup()
+
+        assertNull(viewModel.gameState.value)
+        assertEquals(5, viewModel.settings.value.playerCount)
+        assertEquals(240, viewModel.settings.value.discussionDurationSeconds)
+        assertEquals("Алиса", viewModel.playerNames.value[0])
+        assertEquals("Боб", viewModel.playerNames.value[1])
+    }
+
+    // ───── initializePlayers preserves existing names ─────
+
+    @Test
+    fun `initializePlayers preserves existing names when player count grows`() {
+        viewModel.updatePlayerCount(3)
+        viewModel.initializePlayers()
+        viewModel.updatePlayerName(0, "Алиса")
+        viewModel.updatePlayerName(1, "Боб")
+
+        viewModel.updatePlayerCount(5)
+        viewModel.initializePlayers()
+
+        val names = viewModel.playerNames.value
+        assertEquals(5, names.size)
+        assertEquals("Алиса", names[0])
+        assertEquals("Боб", names[1])
+        assertEquals("Игрок 3", names[2])
+        assertEquals("Игрок 4", names[3])
+        assertEquals("Игрок 5", names[4])
+    }
+
+    @Test
+    fun `initializePlayers preserves existing names when player count shrinks`() {
+        viewModel.updatePlayerCount(5)
+        viewModel.initializePlayers()
+        viewModel.updatePlayerName(0, "Алиса")
+        viewModel.updatePlayerName(1, "Боб")
+        viewModel.updatePlayerName(2, "Карл")
+
+        viewModel.updatePlayerCount(3)
+        viewModel.initializePlayers()
+
+        val names = viewModel.playerNames.value
+        assertEquals(3, names.size)
+        assertEquals(listOf("Алиса", "Боб", "Карл"), names)
+    }
 }
