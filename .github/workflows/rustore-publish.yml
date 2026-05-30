@@ -28,6 +28,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check required secrets
+        env:
+          RUSTORE_KEY: ${{ secrets.RUSTORE_KEY }}
+        run: |
+          if [ -z "$RUSTORE_KEY" ]; then
+            echo "❌ Секрет RUSTORE_KEY не задан."
+            echo ""
+            echo "Создайте ключ в RuStore Console (Public API) и добавьте его"
+            echo "в Settings → Secrets and variables → Actions как RUSTORE_KEY."
+            exit 1
+          fi
+          echo "✅ RUSTORE_KEY задан"
+
       - name: Checkout code
         uses: actions/checkout@v4
 

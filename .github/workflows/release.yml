@@ -15,6 +15,29 @@ jobs:
       contents: write
 
     steps:
+      - name: Check required secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
+        run: |
+          missing=0
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "❌ Секрет KEYSTORE_BASE64 не задан."
+            missing=1
+          fi
+          if [ -z "$KEYSTORE_PROPERTIES" ]; then
+            echo "❌ Секрет KEYSTORE_PROPERTIES не задан."
+            missing=1
+          fi
+          if [ "$missing" -eq 1 ]; then
+            echo ""
+            echo "Тег-релиз подписывается production keystore — без секретов APK не обновит установленную версию."
+            echo "Задайте секреты в Settings → Secrets and variables → Actions."
+            echo "Как получить значения — keystores/README.md."
+            exit 1
+          fi
+          echo "✅ Все необходимые секреты заданы"
+
       - name: Checkout code
         uses: actions/checkout@v4
 

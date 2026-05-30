@@ -73,6 +73,17 @@ jobs:
     needs: test
 
     steps:
+      - name: Check signing secrets (non-blocking)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PROPERTIES" ]; then
+            echo "::warning::KEYSTORE_BASE64/KEYSTORE_PROPERTIES не заданы — release-сборка упадёт на этапе подписи. Задайте секреты по инструкции в keystores/README.md."
+          else
+            echo "✅ Секреты подписи заданы"
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
